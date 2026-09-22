@@ -1,21 +1,24 @@
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 32px;
-  text-align: center;
+.page {
+  min-height: 100vh;
+  background: #faf9f6;
+  color: #242420;
+  padding: 0 max(24px, calc((100vw - 1120px) / 2)) 40px;
+  color-scheme: light;
 }
 
-.main h1 {
-  font-size: clamp(3rem, 10vw, 6rem);
-  letter-spacing: -0.05em;
-  line-height: 1.1;
-}
-
-.main p {
-  font-size: 1.125rem;
-  line-height: 1.6;
+.userHeader { display: flex; justify-content: flex-end; padding: 24px 0; border-bottom: 1px solid #deded5; font-size: 14px; }
+.page a:focus-visible { outline: 3px solid #9a7300; outline-offset: 5px; }
+.sectionHeading { display: flex; align-items: center; justify-content: space-between; padding: 24px 0; }
+.sectionHeading h1 { font-size: 18px; }
+.sectionHeading span { font-size: 13px; color: #62625b; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; list-style: none; }
+.card { height: 100%; display: flex; flex-direction: column; border: 1px solid #deded5; border-radius: 14px; overflow: hidden; background: #fff; }
+.cardText { padding: 24px; flex: 1; }
+.card h2 { font-size: clamp(20px, 3vw, 25px); line-height: 1.4; overflow-wrap: anywhere; }
+.image { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; background: #efeee8; border-top: 1px solid #e6e5df; }
+.notice { padding: 36px 24px; line-height: 1.6; border: 1px solid #deded5; border-radius: 12px; }
+.notice h1 { font-size: 24px; margin-bottom: 12px; }
+.retry { margin-top: 18px; padding: 10px 16px; font: inherit; cursor: pointer; border: 1px solid #62625b; border-radius: 6px; background: #fff; color: #242420; }
+@media (max-width: 640px) {
+  .grid { grid-template-columns: 1fr; }
 }

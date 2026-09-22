@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hello World",
-  description: "My first Next.js Hello World app.",
+  title: "Humor Study | Winnie Chen",
+  description: "Memes and captions from Humor Study.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
