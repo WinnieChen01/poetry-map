@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import AccountHeader from "./components/account-header";
+import { hasCompleteName } from "@/lib/profile";
+import { createAuthClient } from "@/lib/supabase/server";
 import { connection } from "next/server";
 import { createSupabaseClient } from "@/lib/supabase";
 import styles from "./page.module.css";
@@ -32,12 +36,17 @@ export default async function PostsPage() {
   }
 
   const posts = data ?? [];
+  const auth = await createAuthClient();
+  const { data: { user } } = await auth.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await auth.from("profiles").select("id,first_name,last_name,avatar_path").eq("id", user.id).maybeSingle();
+    if (!hasCompleteName(profile)) redirect("/profile");
+  }
 
   return (
     <main className={styles.page}>
-      <header className={styles.userHeader}>
-        <span>Winnie Chen</span>
-      </header>
+      <AccountHeader home />
       <section aria-labelledby="posts-heading">
         <div className={styles.sectionHeading}>
           <h1 id="posts-heading">Latest posts</h1>
