@@ -6,6 +6,79 @@
   color-scheme: light;
 }
 
+/* The map stays fully visible; the tiled grove fills wide screens. */
+.mapPage {
+  position: relative;
+  isolation: isolate;
+  padding: 0 28px 36px;
+  background: #98c76d;
+  font-family: "Courier New", monospace;
+}
+.mapPage .userHeader { border-bottom: 0; min-height: 76px; padding: 16px 0; }
+.mapPage .accountNav { gap: 8px; }
+.mapPage .profileLink,
+.mapPage .authButton,
+.mapPage .signOut {
+  border-radius: 0;
+  border: 3px solid #303c2b;
+  box-shadow: 4px 4px 0 #303c2b;
+  font-family: inherit;
+  font-weight: 700;
+}
+.mapPage .profileLink,
+.mapPage .signOut { background: #f5efdbed; }
+.mapPage .avatar { border-radius: 0; image-rendering: pixelated; }
+.newspaper {
+  width: min(560px, 100%);
+  padding: 20px;
+  margin: clamp(24px, 12vh, 120px) auto 0;
+  color: #303c2b;
+  background: repeating-linear-gradient(0deg, #655f4010 0 1px, transparent 1px 4px), #f5efdbde;
+  border: 3px solid #303c2b;
+  box-shadow: inset 0 0 0 4px #f5efdb, inset 0 0 0 5px #303c2b50, 6px 6px 0 #303c2b80;
+}
+.mapPage .sectionHeading {
+  padding: 0 0 12px;
+  margin-bottom: 16px;
+  border-top: 3px solid #303c2b;
+  border-bottom: 5px double #303c2b;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mapPage .sectionHeading h1 {
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1.3;
+  text-shadow: 2px 2px 0 #aab696;
+}
+.mapPage .sectionHeading span { font-size: 11px; color: #303c2b; }
+.mapPage .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 0; }
+.mapPage .grid > li { padding: 0 10px; }
+.mapPage .grid > li:not(:nth-child(3n + 1)) { border-left: 1px solid #303c2b70; }
+.mapPage .card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mapPage .cardText { padding: 0 0 10px; }
+.mapPage .card h2 { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.mapPage .image {
+  border: 2px solid #303c2b;
+  background: #eee9d8a6;
+  image-rendering: pixelated;
+}
+.mapPage .notice { background: #f5efdbd9; border-radius: 0; }
+@media (max-width: 600px) {
+  .mapPage { padding: 0 14px 28px; }
+
+  .newspaper { margin-top: 12vh; padding: 12px; }
+  .mapPage .grid > li { padding: 0 6px; }
+  .mapPage .card h2 { font-size: 11px; }
+}
+
 .userHeader {
   display: flex;
   align-items: center;
@@ -472,3 +545,85 @@
 .avatarButton:disabled {
   cursor: wait;
 }
+
+.mapViewport { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #98c76d url('/maps/pixel-grove.svg') repeat top left / 144px 144px; touch-action: none; cursor: grab; }
+.mapViewport:active { cursor: grabbing; }
+.mapPlane { position: absolute; left: 50%; top: 50%; width: min(100vw, 77.22vh); transform-origin: center; }
+.mapArtwork { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.buildingOutline { fill: transparent; stroke: transparent; stroke-width: 5px; vector-effect: non-scaling-stroke; cursor: pointer; }
+.buildingOutline:hover, .buildingOutline:focus-visible, .buildingOutline[data-selected="true"] { stroke: #fff; fill: #ffffff20; outline: none; paint-order: stroke fill; }
+.mapPage .userHeader { position: relative; z-index: 3; pointer-events: none; }
+.mapPage .accountNav { pointer-events: auto; }
+.paperOverlay { position: fixed; z-index: 2; inset: 90px 6vw 105px; overflow-y: auto; overscroll-behavior: contain; }
+.paperOverlay .newspaper { margin: 0; width: 100%; min-height: 100%; padding: 28px; }
+.paperOverlay .sectionHeading { padding-right: 42px; padding-left: 42px; }
+.paperOverlay .card h2 { font-size: clamp(14px, 1.5vw, 20px); }
+.paperOverlay .grid > li { padding: 0 18px; }
+.mapControls { position: fixed; z-index: 3; left: 16px; bottom: 20px; display: flex; gap: 6px; }
+.mapControls button, .newPostButton { font: bold 13px 'Courier New', monospace; color: #303c2b; background: #f5efdbeF; border: 3px solid #303c2b; box-shadow: 3px 3px #303c2b80; cursor: pointer; padding: 10px; }
+.mapControls button:focus-visible, .newPostButton:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+.newPostDock { position: fixed; z-index: 3; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.newPostButton { display: flex; align-items: center; gap: 8px; font-size: 18px; padding: 8px 16px; }
+.placeLabel { background: #f5efdbed; padding: 6px 10px; border: 2px solid #303c2b; font-size: 12px; text-align: center; }
+.composeDialog { margin: auto; width: min(420px, calc(100vw - 32px)); padding: 28px; color: #303c2b; background: #f5efdb; border: 3px solid #303c2b; font-family: 'Courier New', monospace; }
+.composeDialog::backdrop { background: #17201666; }
+.composeDialog h2 { margin-bottom: 20px; }
+.composeDialog label { display: block; margin: 16px 0; font-size: 14px; }
+.composeDialog select, .composeDialog textarea { display: block; width: 100%; font: inherit; padding: 10px; margin-top: 8px; border: 2px solid #303c2b; background: #fffdf5; color: #303c2b; }
+.composeClose { position: absolute; top: 8px; right: 12px; font-size: 24px; border: 0; background: transparent; cursor: pointer; color: #303c2b; }
+@media (max-width: 640px) { .mapControls { bottom: 100px; left: 12px; flex-wrap: wrap; max-width: 180px; } .paperOverlay { inset: 90px 14px 155px; } .paperOverlay .newspaper { padding: 16px; } .paperOverlay .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .paperOverlay .grid > li { padding: 0 8px; border-left: 0; } .paperOverlay .grid > li:nth-child(even) { border-left: 1px solid #303c2b70; } }
+
+.paperClose { position: absolute; top: 12px; right: 12px; z-index: 1; width: 40px; height: 40px; border: 2px solid #303c2b; background: #f5efdb; color: #303c2b; font: bold 28px monospace; cursor: pointer; }
+.paperClose:focus-visible { outline: 3px solid #527647; outline-offset: 2px; }
+.mapSettings { position: absolute; bottom: calc(100% + 12px); left: 0; width: 220px; padding: 16px; background: #f5efdb; border: 3px solid #303c2b; box-shadow: 4px 4px #303c2b80; }
+.mapSettings strong { display: block; margin-bottom: 12px; font-size: 14px; }
+.settingsActions { display: flex; gap: 8px; }
+
+.composerFields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.composerFields:disabled { opacity: .7; }
+.captionPreview { margin: 16px 0; display: grid; gap: 12px; text-align: center; }
+.captionPreview img { max-width: 100%; height: 180px; object-fit: contain; margin: auto; }
+.composerActions, .voteButtons { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.voteArea { padding: 12px; border-top: 2px solid #778064; }
+.voteButtons button, .composerActions > button:not(:first-child) { font: inherit; border: 2px solid #303c2b; background: #f5efdb; padding: 8px 12px; cursor: pointer; }
+.voteButtons button[aria-pressed="true"] { background: #303c2b; color: #fff; }
+.voteButtons button:disabled { opacity: .5; cursor: wait; }
+.voteArea p { font-size: .85rem; margin-top: 8px; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+.composeDialog { width: min(600px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; }
+.imageOptions { display: flex; gap: 10px; margin: 12px 0; }
+.imageOptions button, .imageLibrary button { font: inherit; padding: 10px; border: 2px solid #303c2b; background: #fffdf5; color: #303c2b; cursor: pointer; }
+.imageOptions button[aria-pressed="true"] { background: #303c2b; color: #fffdf5; }
+.imageLibrary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-height: 300px; overflow-y: auto; padding: 4px; }
+.imageLibrary button { min-width: 0; text-align: left; }
+.imageLibrary button[aria-pressed="true"] { outline: 3px solid #677e3e; background: #e1e9cd; }
+.imageLibrary img { width: 100%; height: 100px; object-fit: contain; }
+.imageLibrary span { display: block; overflow-wrap: anywhere; font-size: 12px; margin-top: 6px; }
+.composeDialog input { width: 100%; font: inherit; margin-top: 8px; padding: 8px; }
+.uploadPreview { display: block; width: 100%; height: 180px; object-fit: contain; }
+@media (max-width: 480px) { .imageLibrary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.locationHint { position: fixed; z-index: 4; top: 100px; left: 50%; transform: translateX(-50%); padding: 10px 16px; border: 3px solid #303c2b; background: #f5efdbed; pointer-events: none; font-weight: bold; text-align: center; }
+.locationPickerBar { position: fixed; z-index: 5; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: end; width: min(540px, calc(100vw - 32px)); padding: 16px; background: #f5efdb; border: 3px solid #303c2b; box-shadow: 5px 5px #303c2b; }
+.locationPickerBar label { flex: 1; min-width: 0; font-weight: bold; }
+.locationPickerBar select { display: block; width: 100%; margin-top: 8px; padding: 8px; font: inherit; }
+.locationPickerBar button, .composerLocation button { font: inherit; border: 2px solid #303c2b; padding: 8px 12px; background: #fffdf5; color: #303c2b; cursor: pointer; }
+.composerLocation { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.composerLocation button:disabled { opacity: .5; cursor: default; }
+.newPostDock[hidden] { display: none; }
+
+.generationLoading { margin: 18px 0; }
+.generationLoading p { margin: 0 0 10px; font-size: 14px; }
+.generationTrack { height: 16px; overflow: hidden; border: 2px solid #303c2b; padding: 2px; background: #e1e5cf; box-shadow: 3px 3px #303c2b; }
+.generationRunner { display: block; height: 100%; width: 4%; background: repeating-linear-gradient(90deg, #526a38 0 8px, #789951 8px 12px); animation: captionLoading 250s linear forwards; }
+@keyframes captionLoading { 0% { width: 4%; } 12% { width: 35%; } 40% { width: 65%; } 75% { width: 85%; } 100% { width: 95%; } }
+@media (prefers-reduced-motion: reduce) { .generationRunner { animation: none; width: 35%; opacity: .65; } }
+
+.locationPostHeader { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-right: 36px; margin-bottom: 24px; border-bottom: 3px double #303c2b; padding-bottom: 18px; }
+.locationPostHeader h1 { font-size: clamp(22px, 3vw, 38px); }
+
+.captionResult, .captionError { margin: 16px 0; padding: 16px 18px; font-family: Arial, Helvetica, sans-serif; font-size: 17px; line-height: 1.55; letter-spacing: normal; overflow-wrap: anywhere; border: 2px solid #303c2b; }
+.captionResult { background: #fffdf5; color: #20291b; font-weight: 600; }
+.captionError { background: #fff0e8; color: #803316; border-color: #aa573a; }
+.generationLoading p { font-family: Arial, Helvetica, sans-serif; line-height: 1.5; }

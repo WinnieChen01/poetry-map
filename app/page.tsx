@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import VoteButtons from "./components/vote-buttons";
+import CampusMap from "./components/campus-map";
 import AccountHeader from "./components/account-header";
 import { hasCompleteName } from "@/lib/profile";
 import { createAuthClient } from "@/lib/supabase/server";
@@ -16,6 +18,9 @@ export const metadata: Metadata = {
 type Post = {
   id: string;
   caption: string;
+  generation_id: string | null;
+  location: string | null;
+  score: number;
   images: { image_url: string; description: string } | null;
 };
 
@@ -24,9 +29,11 @@ export default async function PostsPage() {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("posts")
-    .select("id, caption, images(image_url, description)")
+    .select("id, caption, generation_id, location, score, images(image_url, description)")
+    .order("score", { ascending: false })
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
+    .limit(60)
     .abortSignal(AbortSignal.timeout(10000))
     .returns<Post[]>();
 
@@ -44,12 +51,18 @@ export default async function PostsPage() {
     if (!hasCompleteName(profile)) redirect("/profile");
   }
 
+  const { data: images, error: imagesError } = await supabase.from("images").select("id,image_url,description");
+  if (imagesError) throw new Error("Unable to load meme images.");
+  const { data: votes } = user ? await auth.from("votes").select("post_id,value").eq("user_id", user.id) : { data: [] };
+  const myVotes = new Map((votes ?? []).map(vote => [vote.post_id, vote.value]));
+
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.mapPage}`}>
       <AccountHeader home />
-      <section aria-labelledby="posts-heading">
+      <CampusMap signedIn={!!user} images={images ?? []}>
+      <section className={styles.newspaper} aria-labelledby="posts-heading">
         <div className={styles.sectionHeading}>
-          <h1 id="posts-heading">Latest posts</h1>
+          <h1 id="posts-heading">trending</h1>
           <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
         </div>
         {posts.length === 0 ? (
@@ -61,6 +74,7 @@ export default async function PostsPage() {
                 <article className={styles.card}>
                   <div className={styles.cardText}>
                     <h2>{post.caption}</h2>
+                    {post.generation_id && <small>AI caption{post.location ? ` · ${post.location}` : ""}</small>}
                   </div>
                   {post.images ? (
                     <Image
@@ -74,12 +88,14 @@ export default async function PostsPage() {
                   ) : (
                     <p className={styles.notice}>Image unavailable</p>
                   )}
+                  <VoteButtons postId={post.id} signedIn={!!user} initialValue={myVotes.get(post.id) ?? 0} initialScore={post.score} />
                 </article>
               </li>
             ))}
           </ul>
         )}
       </section>
+      </CampusMap>
     </main>
   );
 }
