@@ -41,7 +41,7 @@ export default function PostComposer({ images, location, onPublished, onPickLoca
     </div>
     <fieldset disabled={!!busy || !!draft} className={styles.composerFields}>
       {!draft && <ImagePicker selected={image} onSelect={setImage} onBusy={setUploading} mode={mode} onModeChange={setMode} />}
-      <label>Situation<textarea value={situation} onChange={event => setSituation(event.target.value)} required maxLength={500} rows={3} placeholder="When you finally find a seat at Butler…" /></label>
+      <label>Situation (optional)<textarea value={situation} onChange={event => setSituation(event.target.value)} maxLength={500} rows={3} placeholder="Optional — leave blank for an image-only joke." /></label>
     </fieldset>
     {draft && <div className={styles.captionResult} role="status">{draft.caption}</div>}
     {error && <div className={styles.captionError} role="alert">{error}</div>}
