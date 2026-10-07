@@ -584,7 +584,6 @@
 .imageLibrary button { min-width: 0; text-align: left; }
 .imageLibrary button[aria-pressed="true"] { outline: 3px solid #677e3e; background: #e1e9cd; }
 .imageLibrary img { width: 100%; height: 100px; object-fit: contain; }
-.imageLibrary span { display: block; overflow-wrap: anywhere; font-size: 12px; margin-top: 6px; }
 .composeDialog input { width: 100%; font: inherit; margin-top: 8px; padding: 8px; }
 .uploadPreview { display: block; width: 100%; height: 180px; object-fit: contain; }
 @media (max-width: 480px) { .imageLibrary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
