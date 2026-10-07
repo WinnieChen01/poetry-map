@@ -111,7 +111,7 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
       <div className={styles.mapPlane} style={{ transform: `translate(-50%, -50%) translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
         <svg viewBox="0 0 1102 1427" className={styles.mapArtwork} aria-label="Columbia campus buildings">
           <image href="/maps/morningside-pixel-v2.png" width="1102" height="1427" />
-          {buildings.map(building => <polygon key={building.name} points={building.points} className={styles.buildingOutline} data-selected={selected === building.name} tabIndex={0} role="button" aria-label={`Select ${building.name}`} aria-pressed={selected === building.name}
+          {buildings.map(building => <polygon key={building.key ?? building.name} points={building.points} className={styles.buildingOutline} tabIndex={0} role="button" aria-label={`Select ${building.name}`} aria-pressed={selected === building.name}
             onPointerEnter={() => setHovered(building.name)} onPointerLeave={() => setHovered("")}
             onFocus={() => setHovered(building.name)} onBlur={() => setHovered("")}
             onClick={() => { if (!moved.current) chooseLocation(building.name); }}
@@ -123,7 +123,7 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
     {pickingLocation && <div className={styles.locationPickerBar}>
       <label>Drop to a location<select value="" onChange={event => { if (event.target.value) chooseLocation(event.target.value); }}>
         <option value="">Select on the map or choose a building</option>
-        {[...buildings].sort((a,b) => a.name.localeCompare(b.name)).map(building => <option key={building.name}>{building.name}</option>)}
+        {[...new Map(buildings.map(building => [building.name, building])).values()].sort((a,b) => a.name.localeCompare(b.name)).map(building => <option key={building.name}>{building.name}</option>)}
       </select></label>
       <button type="button" onClick={cancelLocation}>Cancel</button>
     </div>}
@@ -148,7 +148,6 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
       </div>}
     </div>
     <div className={styles.newPostDock} hidden={pickingLocation}>
-      {selected && <span className={styles.placeLabel}>{selected}</span>}
       <button className={styles.newPostButton} onClick={openComposer} aria-label="Create a new post">
         <svg width="44" height="40" viewBox="0 0 44 40" aria-hidden="true" shapeRendering="crispEdges"><path fill="#c6c8a9" stroke="#303c2b" strokeWidth="3" d="M3 3h28v30H3z"/><path fill="#f5efdb" stroke="#303c2b" strokeWidth="3" d="M11 9h29v28H11z"/><path stroke="#303c2b" strokeWidth="3" d="M17 16h17M17 22h17M17 28h10"/></svg>
         <span>+new</span>

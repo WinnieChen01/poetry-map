@@ -7,7 +7,7 @@ import type { Profile } from "@/lib/profile";
 import styles from "../page.module.css";
 import PhotoCropper from "./photo-cropper";
 
-export default function ProfileForm({ profile, photoUrl, incomplete }: { profile: Profile; photoUrl: string | null; incomplete: boolean }) {
+export default function ProfileForm({ profile, photoUrl, incomplete, onSaved }: { profile: Profile; photoUrl: string | null; incomplete: boolean; onSaved?: () => void }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -39,6 +39,7 @@ export default function ProfileForm({ profile, photoUrl, incomplete }: { profile
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Couldn’t save your profile.");
       setSaved(true);
+      onSaved?.();
       if (input.current) input.current.value = "";
       setPhoto(null); setPreview(null);
       if (incomplete) router.push("/");

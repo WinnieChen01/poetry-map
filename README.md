@@ -27,7 +27,7 @@ Environment files are ignored by Git. Open http://localhost:3000.
 - `/`: public meme cards; signed-in users with missing names are directed to their profile.
 - `/login`: Google sign-in.
 - `/auth/callback`: exchanges the OAuth code for a session.
-- `/profile`: requires sign-in; edit names and crop/upload a photo.
+- `/profile`: requires sign-in; shows a pixel profile card (click to change name/photo) above a gallery of the user’s posts, where each post can be edited (caption/location) or deleted.
 - `/posts`: redirects to the homepage for existing links.
 
 The Google client ID and secret are configured in Supabase's Google provider, not in this app.
@@ -47,14 +47,14 @@ Avatars are saved as cropped JPEG files in Storage. Only their paths are stored 
 
 ## AI captions and voting
 
-Use **+new** to upload an image or browse the thumbnail library, then describe a situation. Generation uses the image’s stored description and situation (text input), then shows a preview before publishing. The model output, exact prompt, situation, model name, image ID and optional map location are saved in `generations`. Failed attempts remain without a caption and count toward the 10-attempt hourly limit. Closing the composer keeps the preview during the current page session; reloading clears the preview but does not delete its database record.
+Use **+new** to upload an image or browse the thumbnail library, then describe a situation. Uploading a JPG/PNG/WebP under 2 MB normalizes it to WebP and generates a short library description with Gemini vision (`/api/describe`); the description is shown for editing and stored on the `images` row. Generation uses the image’s stored description and situation (text input), then shows a preview before publishing. The model output, exact prompt, situation, model name, image ID and optional map location are saved in `generations`. Failed attempts remain without a caption and count toward the 10-attempt hourly limit. Closing the composer keeps the preview during the current page session; reloading clears the preview but does not delete its database record.
 
-Published posts reference their generation. The newspaper ranks by score, then newest first, showing up to 60 posts. Original manual posts that predate AI captions are votable too. One vote per user/post is enforced in the database; clicking the selected vote removes it, and selecting the other changes it. A trigger updates public scores atomically without exposing voter identities.
+Published posts reference their generation. The newspaper shows up to 60 posts with **trending** (highest score) and **new** (newest first) tabs. Original manual posts that predate AI captions are votable too. One vote per user/post is enforced in the database; clicking the selected vote removes it, and selecting the other changes it. A trigger updates public scores atomically without exposing voter identities.
 
 The remote migrations `ai_captions_votes_and_owner_rls` and `restrict_internal_trigger_execution` are applied to the existing Supabase project. RLS is enabled on all five public tables:
 
-- `images`: public read; no client writes.
-- `posts`: public read; authenticated users publish only their own completed generations. No client updates/deletes.
+- `images`: public read; authenticated users upload their own images (`user_id` / `storage_path`, column-limited insert).
+- `posts`: public read; authenticated users publish their own completed generations and can update the caption/location or delete posts they own (`user_id`, backfilled from the generation).
 - `profiles`: only the owner can read or update their profile; signup trigger creates it.
 - `generations`: owner-only read/create; only an unfinished caption can be completed. Prompts and ownership cannot be changed through the client API.
 - `votes`: owner-only read/insert/update/delete for any post. Value is -1 or 1, with unique user/post pairs.
@@ -86,6 +86,6 @@ Upload setup requires `images.user_id`, `images.storage_path`, an owner-scoped m
 
 ## Map locations
 
-The composer’s **Drop to a location** button temporarily closes the dialog. Select a building on the map (or in the accessible building list) to return with that location. Cancel preserves the previous choice. Image and situation state remain mounted throughout selection. Location is chosen before generation and locked for the generated preview, so the prompt context and published location stay consistent. Start over to choose another location after generating.
+The composer’s **Drop to a location** button temporarily closes the dialog. Select a building (or a lawn) on the map — hovering shows the name and a white contour — to return with that location. Posts with no chosen location default to **Lawn**, and both lawns share one feed. Cancel preserves the previous choice. Changing the location clears any generated caption so it can be regenerated for the new place, and the `/profile` post editor uses the same pixel map to drop or clear a location.
 
-The existing `generations.location` and `posts.location` columns store the building name; no migration is needed. The generation endpoint validates names against `lib/campus-buildings.ts`. The stylized map’s hit regions are approximate visual associations, not geographically accurate campus footprints.
+The existing `generations.location` and `posts.location` columns store the name; the generation endpoint validates names against `lib/campus-buildings.ts`. The stylized map’s hit regions are approximate visual associations, not geographically accurate campus footprints.

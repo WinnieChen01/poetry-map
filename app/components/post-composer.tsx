@@ -8,6 +8,7 @@ export type MemeImage = { id: string; image_url: string; description: string };
 export default function PostComposer({ images, location, onPublished, onPickLocation, onClearLocation }: { images: MemeImage[]; location: string; onPublished: () => void; onPickLocation: () => void; onClearLocation: () => void }) {
   const router = useRouter();
   const [image, setImage] = useState<MemeImage | undefined>(images[0]);
+  const [mode, setMode] = useState<"browse" | "upload">("browse");
   const [situation, setSituation] = useState("");
   const [draft, setDraft] = useState<{ id: string; caption: string } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -35,11 +36,11 @@ export default function PostComposer({ images, location, onPublished, onPickLoca
   return <form onSubmit={event => { event.preventDefault(); void submit(!!draft); }}>
     <div className={styles.composerLocation}>
       {location && <span>{location}</span>}
-      <button type="button" disabled={!!busy || uploading || !!draft} onClick={onPickLocation}>{location ? "Change location" : "Drop to a location"}</button>
+      <button type="button" disabled={!!busy || uploading} onClick={() => { setDraft(null); onPickLocation(); }}>{location ? "Change location" : "Drop to a location (default: Lawn)"}</button>
       {location && !draft && <button type="button" disabled={!!busy || uploading} onClick={onClearLocation}>Remove</button>}
     </div>
     <fieldset disabled={!!busy || !!draft} className={styles.composerFields}>
-      {!draft && <ImagePicker selected={image} onSelect={setImage} onBusy={setUploading} />}
+      {!draft && <ImagePicker selected={image} onSelect={setImage} onBusy={setUploading} mode={mode} onModeChange={setMode} />}
       <label>Situation<textarea value={situation} onChange={event => setSituation(event.target.value)} required maxLength={500} rows={3} placeholder="When you finally find a seat at Butler…" /></label>
     </fieldset>
     {draft && <div className={styles.captionResult} role="status">{draft.caption}</div>}
@@ -50,9 +51,9 @@ export default function PostComposer({ images, location, onPublished, onPickLoca
         <span className={styles.generationRunner} />
       </div>
     </div>}
-    {image && <div className={styles.captionPreview}><Image src={image.image_url} alt={image.description} width={300} height={230} unoptimized /></div>}
+    {image && mode === "browse" && <div className={styles.captionPreview}><Image src={image.image_url} alt={image.description} width={300} height={230} unoptimized /></div>}
     <div className={styles.composerActions}>
-      <button className={styles.authButton} disabled={!!busy || uploading || !image} type="submit">{busy || (draft ? "Post" : "Generate caption")}</button>
+      <button className={styles.authButton} disabled={!!busy || uploading || !image || mode === "upload"} type="submit">{busy || (draft ? "Post" : "Generate caption")}</button>
       {draft && <button type="button" disabled={!!busy} onClick={() => setDraft(null)}>Start over</button>}
     </div>
 

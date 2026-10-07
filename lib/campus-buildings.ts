@@ -1,9 +1,12 @@
 // Hit regions trace the stylized artwork, not surveyed campus footprints.
 // Names come from the supplied Morningside reference map; geography is approximate.
-const rectangle = (name: string, x: number, y: number, width: number, height: number) => ({
+type CampusBuilding = { name: string; points: string; key?: string };
+const rectangle = (name: string, x: number, y: number, width: number, height: number): CampusBuilding => ({
   name, points: `${x},${y} ${x + width},${y} ${x + width},${y + height} ${x},${y + height}`,
 });
-export const campusBuildings = [
+// Both green lawns share the "Lawn" location so their posts collect together.
+const lawn = (key: string, points: string): CampusBuilding => ({ key, name: "Lawn", points });
+export const campusBuildings: CampusBuilding[] = [
   { name: "Butler Library", points: "495,480 508,480 508,471 537,471 537,465 563,465 563,471 590,471 590,480 603,480 603,542 589,542 589,555 507,555 507,542 495,542" },
   { name: "Low Library", points: "501,844 510,844 510,831 525,817 551,812 577,819 591,834 600,850 600,899 587,899 587,917 511,917 511,899 499,899" },
   rectangle("John Jay", 430,336,65,51),
@@ -69,6 +72,8 @@ export const campusBuildings = [
   rectangle("Warren",203,745,101,72),
   rectangle("Mount Sinai St. Luke’s Hospital",274,857,72,75),
   { name: "St. John the Divine", points: "117,83 135,83 135,72 180,72 180,51 202,51 202,72 253,72 253,79 269,79 269,135 202,135 202,164 171,164 171,143 128,143 128,133 113,133" },
+  lawn("lawn-north", "495,385 600,385 600,452 495,452"),
+  lawn("lawn-center", "495,556 600,556 600,618 495,618"),
 ];
 export function isCampusLocation(value: string) {
   return value === "" || campusBuildings.some(building => building.name === value);

@@ -1,7 +1,10 @@
 import sharp from "sharp";
+import { describeImage } from "@/lib/gemini";
 import { createAuthClient } from "@/lib/supabase/server";
 import { imageType } from "@/lib/profile-validation";
 import { reply } from "@/lib/mutation";
+
+export const maxDuration = 120;
 
 export async function GET(request: Request) {
   const db = await createAuthClient();
@@ -32,8 +35,10 @@ export async function POST(request: Request) {
     }
     const form = await new Response(Buffer.concat(chunks), { headers: { "Content-Type": request.headers.get("content-type") || "" } }).formData();
     const file = form.get("image");
-    const description = form.get("description");
-    if (!(file instanceof File) || !file.size || file.size > 2 * 1024 * 1024 || typeof description !== "string" || !description.trim() || description.trim().length > 200) return reply({ error: "Choose an image under 2 MB and add a short description." }, 400);
+    const descriptionValue = form.get("description");
+    let descriptionText = typeof descriptionValue === "string" ? descriptionValue.trim() : "";
+    if (descriptionText.length > 200) return reply({ error: "Keep the description under 200 characters." }, 400);
+    if (!(file instanceof File) || !file.size || file.size > 2 * 1024 * 1024) return reply({ error: "Choose an image under 2 MB." }, 400);
     const bytes = new Uint8Array(await file.arrayBuffer());
     const type = imageType(bytes);
     if (!type || type.mime !== file.type) return reply({ error: "Choose a valid JPG, PNG, or WebP." }, 400);
@@ -42,11 +47,18 @@ export async function POST(request: Request) {
       normalized = await sharp(bytes, { limitInputPixels: 25000000, failOn: "warning" }).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
     } catch { return reply({ error: "This image couldn’t be opened. Try a smaller JPG, PNG, or WebP." }, 400); }
     if (normalized.byteLength > 2 * 1024 * 1024) return reply({ error: "This image is too large after processing. Choose a smaller image." }, 400);
+    // Generate a description when the uploader didn’t provide one, so every
+    // stored image has a usable library description.
+    if (!descriptionText) {
+      const outcome = await describeImage(normalized, "image/webp");
+      if ("error" in outcome) return reply({ error: outcome.error }, outcome.status);
+      descriptionText = outcome.text.slice(0, 200);
+    }
     const path = `${user.id}/${crypto.randomUUID()}.webp`;
     const { error: uploadError } = await db.storage.from("meme-images").upload(path, normalized, { contentType: "image/webp", upsert: false });
     if (uploadError) return reply({ error: "Upload unavailable. Please check image storage permissions." }, 503);
     const { data: { publicUrl } } = db.storage.from("meme-images").getPublicUrl(path);
-    const { data, error } = await db.from("images").insert({ image_url: publicUrl, description: description.trim(), user_id: user.id, storage_path: path }).select("id,image_url,description").single();
+    const { data, error } = await db.from("images").insert({ image_url: publicUrl, description: descriptionText, user_id: user.id, storage_path: path }).select("id,image_url,description").single();
     if (error) {
       await db.storage.from("meme-images").remove([path]);
       return reply({ error: "Couldn’t save this image. Please check image library permissions." }, 503);
