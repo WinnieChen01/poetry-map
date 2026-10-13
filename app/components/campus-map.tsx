@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import type { MemoryPin } from "@/lib/memory-pin";
 import LocationPosts from "./location-posts";
 import PostComposer, { type MemeImage } from "./post-composer";
+import PixelMapSvg from "./pixel-map-svg";
 import styles from "../page.module.css";
 
-import { campusBuildings as buildings } from "@/lib/campus-buildings";
+import { DEFAULT_MAP_ID, OVERWORLD_ID, mapById, type MapRegion } from "@/lib/maps";
 
 type Point = { x: number; y: number };
 
@@ -18,26 +20,35 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
   const [selected, setSelected] = useState("");
   const [hovered, setHovered] = useState("");
   const [pickingLocation, setPickingLocation] = useState(false);
+  const [mapId, setMapId] = useState<string>(DEFAULT_MAP_ID);
   const previousLocation = useRef("");
-  const [postLocation, setPostLocation] = useState("");
-  const [view, setView] = useState({ x: 0, y: 0, scale: 1.8 });
+  const [pin, setPin] = useState<MemoryPin | null>(null);
+  const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const viewport = useRef<HTMLDivElement>(null);
   const pointers = useRef(new Map<number, Point>());
   const moved = useRef(false);
   const origin = useRef<Point | null>(null);
   const composer = useRef<HTMLDialogElement>(null);
-  const resetCampusView = useCallback(() => {
+
+  const map = mapById(mapId);
+  const names = map.regions.map(region => region.name);
+
+  const resetMapView = useCallback(() => {
     const bounds = viewport.current?.getBoundingClientRect();
     if (!bounds) return;
-    const mapWidth = Math.min(bounds.width, bounds.height * .7722);
-    // Frame the central campus in the redrawn, upright-building map.
+    if (mapId === OVERWORLD_ID) {
+      // Open the whole island centered: every district visible, zoom in to explore.
+      setView({ x: 0, y: 0, scale: 1 });
+      return;
+    }
+    const mapWidth = Math.min(bounds.width, bounds.height * (1102 / 1427));
     setView({ x: 0, y: mapWidth * (79 / 1102) * 1.8, scale: 1.8 });
-  }, []);
+  }, [mapId]);
 
   useEffect(() => {
-    const frame = requestAnimationFrame(resetCampusView);
+    const frame = requestAnimationFrame(resetMapView);
     return () => cancelAnimationFrame(frame);
-  }, [resetCampusView]);
+  }, [resetMapView]);
 
   const transform = useCallback((from: Point, to: Point, factor: number) => {
     const bounds = viewport.current?.getBoundingClientRect();
@@ -64,14 +75,27 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
   }, [transform]);
 
   function chooseLocation(name: string) {
+    const region = map.regions.find(entry => entry.name === name);
+    // Districts navigate to a local map; only leaf places can hold a pin.
+    if (!region || region.goto) return;
     setSelected(name);
     if (pickingLocation) {
-      setPostLocation(name);
-      setPickingLocation(false);
+      const points = region.points.trim().split(/\s+/).map(pair => pair.split(",").map(Number));
+      setPin({ mapId: "columbia", location: name, x: points.reduce((sum, p) => sum + p[0], 0) / points.length, y: points.reduce((sum, p) => sum + p[1], 0) / points.length });
+      setPickingLocation(false); setHovered("");
       composer.current?.showModal();
     } else {
       setHovered(""); setLocationPanel(name); setPaper(true);
     }
+  }
+  function activateRegion(region: MapRegion) {
+    if (moved.current) return;
+    if (region.goto) {
+      // Only Columbia has a detailed map so far; the island is an overview.
+      if (region.goto === "columbia") { setMapId("columbia"); setSelected(""); setHovered(""); }
+      return;
+    }
+    chooseLocation(region.name);
   }
   function cancelLocation() {
     setSelected(previousLocation.current);
@@ -82,7 +106,9 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
     composer.current?.showModal();
   }
   return <>
-    <div ref={viewport} className={styles.mapViewport} aria-label="Interactive campus map"
+    <div ref={viewport} className={styles.mapViewport}
+      style={map.id === OVERWORLD_ID ? { background: "#458cd3 url('/maps/pixel-water.svg') repeat top left / 144px 144px" } : undefined}
+      aria-label={`Interactive map of ${map.label}`}
       onKeyDown={event => { if (event.key === "Escape" && pickingLocation) { event.preventDefault(); cancelLocation(); } }}
       onPointerDown={event => {
         if (event.button !== 0) return;
@@ -108,32 +134,37 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
       onPointerUp={event => pointers.current.delete(event.pointerId)}
       onPointerCancel={event => pointers.current.delete(event.pointerId)}
       onLostPointerCapture={event => pointers.current.delete(event.pointerId)}>
-      <div className={styles.mapPlane} style={{ transform: `translate(-50%, -50%) translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
-        <svg viewBox="0 0 1102 1427" className={styles.mapArtwork} aria-label="Columbia campus buildings">
-          <image href="/maps/morningside-pixel-v2.png" width="1102" height="1427" />
-          {buildings.map(building => <polygon key={building.key ?? building.name} points={building.points} className={styles.buildingOutline} tabIndex={0} role="button" aria-label={`Select ${building.name}`} aria-pressed={selected === building.name}
-            onPointerEnter={() => setHovered(building.name)} onPointerLeave={() => setHovered("")}
-            onFocus={() => setHovered(building.name)} onBlur={() => setHovered("")}
-            onClick={() => { if (!moved.current) chooseLocation(building.name); }}
-            onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setPaper(false); chooseLocation(building.name); } }}><title>{building.name}</title></polygon>)}
-        </svg>
+      <div className={styles.mapPlane} style={{ width: `min(100vw, ${(map.width / map.height * 100).toFixed(3)}vh)`, transform: `translate(-50%, -50%) translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
+        <PixelMapSvg map={map} selected={selected} ariaLabel={`${map.label} pixel map`}
+          pin={pin} onPin={pickingLocation && map.id === "columbia" ? (x, y, location) => {
+            if (moved.current || x < 0 || y < 0 || x > map.width || y > map.height) return;
+            setPin({ mapId: "columbia", x, y, location });
+            setSelected(location); setHovered(""); setPickingLocation(false); composer.current?.showModal();
+          } : undefined}
+          regionActionable={region => map.id !== OVERWORLD_ID || region.goto === "columbia"}
+          onHover={setHovered} onLeave={() => setHovered("")} onActivate={activateRegion} />
       </div>
     </div>
-    {(hovered || pickingLocation) && <div className={styles.locationHint} role="status">{hovered || "Select a building"}</div>}
+    {!paper && (hovered || pickingLocation) && <div className={styles.locationHint} role="status">{hovered || (map.id === OVERWORLD_ID ? "Tap Columbia to open its detailed map" : `Tap the ${map.label} map to drop a pin`)}</div>}
     {pickingLocation && <div className={styles.locationPickerBar}>
-      <label>Drop to a location<select value="" onChange={event => { if (event.target.value) chooseLocation(event.target.value); }}>
-        <option value="">Select on the map or choose a building</option>
-        {[...new Map(buildings.map(building => [building.name, building])).values()].sort((a,b) => a.name.localeCompare(b.name)).map(building => <option key={building.name}>{building.name}</option>)}
-      </select></label>
+      {map.id === OVERWORLD_ID
+        ? <span>Tap the green Columbia area to open its detailed map, then drop the pin.</span>
+        : <label>Or choose a building<select value="" onChange={event => { if (event.target.value) chooseLocation(event.target.value); }}>
+            <option value="">{`Select a place in ${map.label}`}</option>
+            {names.map(name => <option key={name}>{name}</option>)}
+          </select></label>}
       <button type="button" onClick={cancelLocation}>Cancel</button>
     </div>}
     {paper && <div className={styles.paperOverlay}>
       <button type="button" className={styles.paperClose} aria-label={locationPanel ? "Close location posts" : "Close trending"} onClick={() => setPaper(false)}>×</button>
       {locationPanel ? <LocationPosts key={locationPanel} location={locationPanel} onCreate={() => {
-        setPostLocation(locationPanel); setComposerVersion(value => value + 1); composer.current?.showModal();
+        setPin(null); setComposerVersion(value => value + 1); composer.current?.showModal();
       }} /> : children}
     </div>}
     <div className={styles.mapControls} aria-label="Map controls">
+      {map.id === OVERWORLD_ID
+        ? <button type="button" onClick={() => setMapId(DEFAULT_MAP_ID)}>← columbia</button>
+        : <button type="button" onClick={() => setMapId(OVERWORLD_ID)}>island</button>}
       <button type="button" aria-label="Map settings" aria-expanded={settings} aria-controls="map-settings" onClick={() => setSettings(value => !value)}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 2h6v3l2 1 3-1 2 5-3 2v2l2 2-3 5-3-2-2 1v2H9v-3l-2-1-3 1-2-5 3-2v-2L3 8l3-5 3 2z"/><path d="M9 9h6v6H9z"/></svg>
       </button>
@@ -143,7 +174,7 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
       <div className={styles.settingsActions}>
       <button aria-label="Zoom in" onClick={() => { const r = viewport.current!.getBoundingClientRect(); const p = { x: r.width / 2, y: r.height / 2 }; transform(p, p, 1.25); }}>+</button>
       <button aria-label="Zoom out" onClick={() => { const r = viewport.current!.getBoundingClientRect(); const p = { x: r.width / 2, y: r.height / 2 }; transform(p, p, .8); }}>−</button>
-      <button onClick={resetCampusView}>Reset</button>
+      <button onClick={resetMapView}>Reset</button>
       </div>
       </div>}
     </div>
@@ -155,13 +186,13 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
     </div>
     <dialog ref={composer} className={styles.composeDialog}>
       <button type="button" className={styles.composeClose} aria-label="Close new post" onClick={() => composer.current?.close()}>×</button>
-      <h2>new post</h2>
-      {!signedIn ? <Link href="/login" className={styles.authButton}>Sign in to create</Link> : <PostComposer key={composerVersion} images={images} location={postLocation} onPickLocation={() => {
+      <h2>new memory</h2>
+      {!signedIn ? <Link href="/login" className={styles.authButton}>Sign in to create</Link> : <PostComposer key={composerVersion} images={images} pin={pin} onPickLocation={() => {
         previousLocation.current = selected;
         setPickingLocation(true); setPaper(false); setSettings(false);
         composer.current?.close();
         requestAnimationFrame(() => { const first = viewport.current?.querySelector<SVGPolygonElement>("polygon"); first?.focus({ preventScroll: true }); });
-      }} onClearLocation={() => setPostLocation("")} onPublished={() => { composer.current?.close(); setPostLocation(""); setLocationPanel(""); setPaper(true); }} />}
+      }} onPublished={() => { composer.current?.close(); setHovered(""); setSelected(""); setPin(null); setLocationPanel(""); setPaper(true); }} />}
     </dialog>
   </>;
 }

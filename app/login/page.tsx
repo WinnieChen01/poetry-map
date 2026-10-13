@@ -4,7 +4,7 @@ import { createAuthClient } from "@/lib/supabase/server";
 import GoogleButton from "./google-button";
 import styles from "../page.module.css";
 
-export const metadata = { title: "Sign in | Joke Generator" };
+export const metadata = { title: "Sign in | Memory Diary" };
 
 export default async function LoginPage() {
   const supabase = await createAuthClient();

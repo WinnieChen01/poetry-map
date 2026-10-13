@@ -10,8 +10,8 @@ import { createSupabaseClient } from "@/lib/supabase";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
-  title: "Humor Study | Winnie Chen",
-  description: "A little campus humor, one meme at a time.",
+  title: "Memory Diary | Winnie Chen",
+  description: "Photos, feelings, and three-line poems tied to places.",
 };
 
 export default async function PostsPage() {
@@ -42,7 +42,7 @@ export default async function PostsPage() {
   }
 
   const { data: images, error: imagesError } = await supabase.from("images").select("id,image_url,description");
-  if (imagesError) throw new Error("Unable to load meme images.");
+  if (imagesError) throw new Error("Unable to load images.");
   const { data: votes } = user ? await auth.from("votes").select("post_id,value").eq("user_id", user.id) : { data: [] };
   const myVotes = Object.fromEntries((votes ?? []).map(vote => [vote.post_id, vote.value])) as Record<string, number>;
 
@@ -50,7 +50,7 @@ export default async function PostsPage() {
     <main className={`${styles.page} ${styles.mapPage}`}>
       <AccountHeader home />
       <CampusMap signedIn={!!user} images={images ?? []}>
-        <section className={styles.newspaper} aria-label="Campus meme feed">
+        <section className={styles.newspaper} aria-label="Memory diary feed">
           <PostFeed posts={posts} signedIn={!!user} votes={myVotes} />
         </section>
       </CampusMap>

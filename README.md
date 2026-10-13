@@ -1,6 +1,6 @@
-# Joke Generator
+# Memory Diary
 
-A pixel campus map with a trending meme newspaper, Google sign-in, editable profiles, AI caption generation, and voting.
+A location-based memory diary with photos, three-line AI-assisted poems, Google sign-in, editable profiles, and voting.
 
 ## Local development
 
@@ -45,9 +45,17 @@ The app expects:
 
 Avatars are saved as cropped JPEG files in Storage. Only their paths are stored in `profiles`. The original upload is retained in browser memory during editing, not persisted.
 
-## AI captions and voting
+## Poetry generation and editing
 
-Use **+new** to upload an image or browse the library, then optionally describe a situation. Choosing a file uploads and selects it in one step; a description is generated with Gemini vision and stored on the `images` row (never shown in the UI). Generation uses the image’s stored description and, when given, the situation; with no situation it writes a school-themed caption from the image alone. The model output, exact prompt, situation, model name, image ID and optional map location are saved in `generations`. Failed attempts remain without a caption and count toward the 10-attempt hourly limit. Closing the composer keeps the preview during the current page session; reloading clears the preview but does not delete its database record.
+Use **+new** to upload a photo or browse the existing library. Optionally describe your mood, thoughts, activity, or what the moment means to you (up to 500 characters). **Generate poem** sends the actual photo plus this context to the existing Gemini integration. Server-side image loading is restricted to this project's `meme-images` bucket, bounded to 8 MB, and resized before being passed as inline image data. Uploaded originals remain in Storage.
+
+The prompt requests exactly three nonempty lines, no title or explanation, and natural, specific imagery without clichés or invented personal experiences. No 5-7-5 syllable count is enforced. Without context, the prompt focuses on visible atmosphere without assuming the user's emotions. Generated poems fit the existing 300-character storage limit.
+
+**Regenerate** creates a fresh variation. **More nostalgic**, **More playful**, **More peaceful**, and **More poetic** send the chosen tone and the current edited poem alongside the original photo/context. The tone is stylistic, not a claim about the user's actual experiences. If generation fails, the current poem and edits remain intact.
+
+The generated poem is editable before **Save poem**, which shares it publicly in the existing feed and selected location. An edited version is recorded as a separate generation row marked `model=manual-edit`, with its source generation ID, original text, and edited text in the revision's prompt metadata. The original model output and prompt stay unchanged. Publishing then uses the existing ownership checks and generation link; retries reuse the saved revision. Both AI calls and manual draft revisions count toward the existing 10-row hourly limit.
+
+The poetry text reuses existing columns: `caption` stores the poem, `situation` stores optional context, and `prompt` stores the full generation/refinement instructions. Existing posts, location behavior, authentication, storage, and voting remain compatible. The internal `MemeImage` type and `meme-images` bucket keep their names to avoid unrelated migrations.
 
 Published posts reference their generation. The newspaper shows up to 60 posts with **trending** (highest score) and **new** (newest first) tabs. Original manual posts that predate AI captions are votable too. One vote per user/post is enforced in the database; clicking the selected vote removes it, and selecting the other changes it. A trigger updates public scores atomically without exposing voter identities.
 
@@ -67,6 +75,7 @@ Create a Gemini API key in Google AI Studio and add it to `.env.local` and Verce
 
 ```sh
 npm run lint
+node --experimental-strip-types --test tests/poetry.test.mjs
 npm run build
 ```
 
@@ -84,8 +93,41 @@ The composer offers Upload image and Browse images. The library is paginated in 
 
 Upload setup requires `images.user_id`, `images.storage_path`, an owner-scoped metadata INSERT policy, and owner-folder INSERT/SELECT plus unused-file DELETE policies on the `meme-images` storage bucket. These additional upload policies have not yet been applied; reconnect Supabase or run the separately provided setup SQL. No service-role key is required.
 
-## Map locations
+## Maps
 
-The composer’s **Drop to a location** button temporarily closes the dialog. Select a building (or a lawn) on the map — hovering shows the name and a white contour — to return with that location. Posts with no chosen location default to **Lawn**, and both lawns share one feed. Cancel preserves the previous choice. Changing the location clears any generated caption so it can be regenerated for the new place, and the `/profile` post editor uses the same pixel map to drop or clear a location.
+The app uses low-resolution pixel maps (see `lib/maps.ts`):
 
-The existing `generations.location` and `posts.location` columns store the name; the generation endpoint validates names against `lib/campus-buildings.ts`. The stylized map’s hit regions are approximate visual associations, not geographically accurate campus footprints.
+- **Columbia campus** (`columbia`) — the detailed map that opens by default and where memory pins are dropped.
+- **Manhattan island overview** (`manhattan`) — the Manhattan contour, kept transparent over the ocean, subdivided into ~30 named neighborhood regions (Inwood → Battery) with light boundary lines. Every district is dark; only ones that already have a detailed map are lit up. Today that is **Columbia** alone, so every other neighborhood is labelled but not yet selectable.
+
+The site opens on the Columbia map (`DEFAULT_MAP_ID`). The **island** button in the map controls switches to the overview, which opens centred and scaled up (zoom out to 1 to see the whole island); **← columbia** or clicking the green Columbia area returns to the detailed map. Every map supports drag-pan, wheel/pinch zoom, and a Reset control, and all artwork is nearest-neighbor scaled (`image-rendering: pixelated`) so pixels stay crisp at every zoom level.
+
+Making another district ready later means giving it a detailed local map, adding its name to the `DETAILED` set (or a `goto`) in the `bands` list in `scripts/build-maps.mjs`, regenerating, and allowing its `goto` target in `regionActionable`/`activateRegion` in `app/components/campus-map.tsx`.
+
+Pins are dropped on the Columbia map (image → context → poem → refine/edit → pin → save). Pins use Columbia artwork coordinates (1102 × 1427), so zooming does not change their position.
+
+### Regenerating the maps
+
+The overworld and neighborhood PNGs, plus their hit regions (`lib/generated-maps.ts`), are produced deterministically by a tile-based pixel-art generator sharing one palette sampled from the Columbia map:
+
+```sh
+node scripts/build-maps.mjs
+```
+
+Edit the palette, tile sprites, or the per-neighborhood `LOCAL_MAPS` config in `scripts/build-maps.mjs`, then re-run it. The existing Columbia artwork (`public/maps/morningside-pixel-v2.png`) and `lib/campus-buildings.ts` are reused untouched and are never overwritten by the generator.
+
+### Memory pinning
+
+New memories follow image → context → poem → refine/edit → campus pin → save.
+Map metadata is never passed to Gemini. The prompt excludes named places even
+when mentioned in context. Pins use Columbia artwork coordinates (1102 × 1427),
+so zooming does not change their position. The registry remains available for
+future maps; the memory creation map currently stays on Columbia.
+
+Database migrations `memory_pins_and_atomic_publish` and
+`grant_memory_pin_insert_columns` are applied in Supabase. It adds `posts.map_id`, `pin_x`, and `pin_y`, with
+bounds checks, and the authenticated `publish_memory` function. This operation
+verifies draft ownership, saves text and coordinates atomically, and safely
+returns the existing post on repeat requests. Existing rows and voting policies
+are preserved. Verified authenticated saving, duplicate retry handling, foreign-draft rejection,
+and anonymous access denial with rollback-only tests.

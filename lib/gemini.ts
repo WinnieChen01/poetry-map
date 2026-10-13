@@ -58,6 +58,6 @@ export async function geminiText(parts: Part[], maxOutputTokens = 2048): Promise
 
 /** Asks Gemini's vision model for a short library description of an uploaded image. */
 export function describeImage(bytes: Uint8Array, mime: string) {
-  const prompt = "Describe this image in one short, factual phrase (max 100 characters) for a meme library. Focus on what is depicted and any text in the image. Return only the description.";
+  const prompt = "Describe this image in one short, factual phrase (max 100 characters) for a photo memory diary. Focus on what is depicted and any text in the image. Return only the description.";
   return geminiText([{ text: prompt }, { inlineData: { mimeType: mime, data: Buffer.from(bytes).toString("base64") } }]);
 }

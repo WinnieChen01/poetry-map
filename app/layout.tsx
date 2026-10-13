@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Humor Study | Winnie Chen",
-  description: "Memes and captions from Humor Study.",
+  title: "Memory Diary | Winnie Chen",
+  description: "A location-based memory diary with AI-assisted poetry.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

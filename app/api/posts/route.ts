@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { isCampusLocation } from "@/lib/campus-buildings";
+import { isValidLocation } from "@/lib/maps";
 import { mutation, reply, uuid } from "@/lib/mutation";
 
 /** Edits the caption/location of one of the signed-in user's posts. */
@@ -9,7 +9,7 @@ export async function PATCH(request: Request) {
   const { db, body } = context;
   const caption = typeof body.caption === "string" ? body.caption.trim() : "";
   const location = typeof body.location === "string" ? body.location.trim() : "";
-  if (!uuid(body.postId) || !caption || caption.length > 300 || location.length > 100 || !isCampusLocation(location)) return reply({ error: "Enter a caption (up to 300 characters) and choose a building from the map." }, 400);
+  if (!uuid(body.postId) || !caption || caption.length > 300 || location.length > 100 || !isValidLocation(location)) return reply({ error: "Enter a poem (up to 300 characters) and choose a building from the map." }, 400);
   // RLS limits the update to posts owned by the caller, so a foreign id matches no row.
   const { data, error } = await db.from("posts").update({ caption, location: location || null }).eq("id", body.postId).select("id").single();
   if (error || !data) return reply({ error: "Couldn’t update this post. Please try again." }, 503);

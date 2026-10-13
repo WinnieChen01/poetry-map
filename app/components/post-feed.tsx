@@ -28,15 +28,15 @@ export default function PostFeed({ posts, signedIn, votes }: { posts: FeedPost[]
       <span className={styles.feedCount}>{ordered.length} {ordered.length === 1 ? "post" : "posts"}</span>
     </div>
     {ordered.length === 0 ? (
-      <p className={styles.notice}>No posts yet. Check back soon for a little humor.</p>
+      <p className={styles.notice}>No memories yet. Create a poem from a moment you want to keep.</p>
     ) : (
       <ul className={styles.grid}>
         {ordered.map(post => (
           <li key={post.id}>
             <article className={styles.card}>
               <div className={styles.cardText}>
-                <h2>{post.caption}</h2>
-                {post.generation_id && <small>AI caption{post.location ? ` · ${post.location}` : ""}</small>}
+                <h2 className={styles.poemText}>{post.caption}</h2>
+                {post.generation_id && <small>AI-assisted{post.location ? ` · ${post.location}` : ""}</small>}
               </div>
               {post.images ? (
                 <Image src={post.images.image_url} alt={post.images.description} width={640} height={640} unoptimized className={styles.image} />

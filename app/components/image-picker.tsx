@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Image from "next/image";
+import { preparePhoto } from "../../lib/prepare-photo";
 import type { MemeImage } from "./post-composer";
 import styles from "../page.module.css";
 
 type ImagePickerMode = "browse" | "upload";
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 2 * 1024 * 1024;
 
 export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeChange }: {
   selected: MemeImage | undefined;
@@ -21,6 +20,8 @@ export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeCh
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [status, setStatus] = useState("");
   const lock = useRef(false);
   const previewUrl = useRef("");
   useEffect(() => () => { if (previewUrl.current) URL.revokeObjectURL(previewUrl.current); }, []);
@@ -49,28 +50,33 @@ export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeCh
     if (lock.current) return;
     lock.current = true; setBusy(true); setError("");
     onBusy(true);
-    // No description is sent; the server generates and stores one.
-    const form = new FormData(); form.set("image", next);
     try {
+      setStatus("Preparing photo…");
+      const prepared = await preparePhoto(next);
+      if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
+      previewUrl.current = URL.createObjectURL(prepared); setPreview(previewUrl.current);
+      setStatus("Uploading and generating a description…");
+      const form = new FormData(); form.set("image", prepared);
       const response = await fetch("/api/images", { method: "POST", body: form });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Upload failed.");
       onSelect(data.image); setImages(current => [data.image, ...current]);
       if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-      previewUrl.current = ""; setPreview(""); onModeChange("browse");
+      previewUrl.current = ""; setPreview(""); setPendingFile(null); onModeChange("browse");
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Couldn’t upload. Please retry."); }
     finally { lock.current = false; setBusy(false); onBusy(false); }
   }
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
     const next = event.target.files?.[0]; setError("");
     if (!next) return;
-    if (next.size > MAX_BYTES || !ACCEPTED.includes(next.type)) { setError("Choose a JPG, PNG, or WebP under 2 MB."); event.target.value = ""; return; }
+    if (lock.current) return;
+    setPendingFile(next);
     if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
-    previewUrl.current = URL.createObjectURL(next); setPreview(previewUrl.current);
+    previewUrl.current = ""; setPreview("");
     event.target.value = "";
     void upload(next);
   }
-  return <section aria-label="Choose a meme image">
+  return <section aria-label="Choose a photo">
     <div className={styles.imageOptions}>
       <button type="button" aria-pressed={mode === "upload"} disabled={busy} onClick={() => { onModeChange("upload"); setError(""); }}>Upload image</button>
       <button type="button" aria-pressed={mode === "browse"} disabled={busy} onClick={() => { onModeChange("browse"); setError(""); }}>Browse images</button>
@@ -83,9 +89,11 @@ export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeCh
       {(hasMore || page === -1 || error) && <button type="button" disabled={busy} onClick={() => void load(page + 1)}>{busy ? "Loading…" : error ? "Retry" : "Load more"}</button>}
     </> : <>
       <label>Choose image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={chooseFile} /></label>
+      {pendingFile && <p className={styles.hint}>{pendingFile.name}</p>}
       {preview && <Image className={styles.uploadPreview} src={preview} alt="Upload preview" width={300} height={180} unoptimized />}
-      <p className={styles.hint}>{busy ? "Uploading and generating a description…" : "JPG, PNG or WebP · Up to 2 MB. Choosing a file uploads and selects it; a description is generated and stored automatically."}</p>
+      <p className={styles.hint}>{busy ? status : "JPG, PNG or WebP · Up to 20 MB. Large photos are resized automatically."}</p>
     </>}
     {error && <p role="alert">{error}</p>}
+    {mode === "upload" && error && preview && pendingFile && !busy && <button type="button" onClick={() => void upload(pendingFile)}>Retry upload</button>}
   </section>;
 }

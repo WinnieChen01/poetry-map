@@ -56,7 +56,7 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
     finally { setBusy(""); }
   }
 
-  if (!posts.length) return <p className={styles.notice}>You haven’t posted yet. Use “+new” on the map to share your first meme.</p>;
+  if (!posts.length) return <p className={styles.notice}>You haven’t posted yet. Use “+new” on the map to save your first poem.</p>;
 
   return <>
     {error && <p role="alert" className={styles.formError}>{error}</p>}
@@ -67,7 +67,7 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
             {post.images ? <Image src={post.images.image_url} alt={post.images.description} width={400} height={400} unoptimized /> : <p className={styles.notice}>Image unavailable</p>}
           </div>
           {editing === post.id ? <div className={styles.myPostEdit}>
-            <label>Caption<textarea value={caption} maxLength={300} rows={3} disabled={!!busy} onChange={event => setCaption(event.target.value)} /></label>
+            <label>Poem<textarea value={caption} maxLength={300} rows={3} disabled={!!busy} onChange={event => setCaption(event.target.value)} /></label>
             <div className={styles.myPostLocation}>
               <span>Location</span>
               <button type="button" disabled={!!busy} onClick={() => locationDialog.current?.showModal()}>{location || "Choose on the map"}</button>
@@ -77,7 +77,7 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
               <button type="button" disabled={!!busy} onClick={() => setEditing(null)}>Cancel</button>
             </div>
           </div> : <div className={styles.myPostBody}>
-            <h2>{post.caption}</h2>
+            <h2 className={styles.poemText}>{post.caption}</h2>
             <p className={styles.myPostMeta}>{post.location || "No location"} · {post.score} {Math.abs(post.score) === 1 ? "point" : "points"}</p>
             <div className={styles.myPostActions}>
               <button type="button" disabled={!!busy} onClick={() => startEdit(post)}>Edit</button>

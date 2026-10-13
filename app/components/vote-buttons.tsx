@@ -21,7 +21,7 @@ export default function VoteButtons({ postId, signedIn, initialValue, initialSco
   }
   return <div className={styles.voteArea}>
     <div className={styles.voteButtons}>
-      {signedIn ? <><button aria-label="Upvote caption" aria-pressed={value === 1} disabled={busy} onClick={() => void vote(1)}>▲</button><span aria-live="polite">{score}</span><button aria-label="Downvote caption" aria-pressed={value === -1} disabled={busy} onClick={() => void vote(-1)}>▼</button></> : <><span>{score} points</span><Link href="/login">Sign in to vote</Link></>}
+      {signedIn ? <><button aria-label="Upvote post" aria-pressed={value === 1} disabled={busy} onClick={() => void vote(1)}>▲</button><span aria-live="polite">{score}</span><button aria-label="Downvote post" aria-pressed={value === -1} disabled={busy} onClick={() => void vote(-1)}>▼</button></> : <><span>{score} points</span><Link href="/login">Sign in to vote</Link></>}
     </div>
     {error && <p role="alert">{error}</p>}
   </div>;
