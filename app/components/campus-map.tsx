@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { mapTime } from "@/lib/map-time";
 import type { MemoryPin } from "@/lib/memory-pin";
 import LocationPosts from "./location-posts";
 import PostComposer, { type MemeImage } from "./post-composer";
@@ -13,6 +14,23 @@ import { DEFAULT_MAP_ID, OVERWORLD_ID, mapById, type MapRegion } from "@/lib/map
 type Point = { x: number; y: number };
 
 export default function CampusMap({ children, signedIn, images }: { children: ReactNode; signedIn: boolean; images: MemeImage[] }) {
+  const [localTime, setLocalTime] = useState<ReturnType<typeof mapTime> | null>(null);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const update = () => {
+      clearTimeout(timer);
+      setLocalTime(mapTime(new Date()));
+      timer = setTimeout(update, 60000 - Date.now() % 60000);
+    };
+    const frame = requestAnimationFrame(update);
+    document.addEventListener("visibilitychange", update);
+    window.addEventListener("focus", update);
+    return () => {
+      cancelAnimationFrame(frame); clearTimeout(timer);
+      document.removeEventListener("visibilitychange", update);
+      window.removeEventListener("focus", update);
+    };
+  }, []);
   const [paper, setPaper] = useState(true);
   const [locationPanel, setLocationPanel] = useState("");
   const [composerVersion, setComposerVersion] = useState(0);
@@ -106,8 +124,16 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
     composer.current?.showModal();
   }
   return <>
+    {localTime && <time className={styles.mapClock} dateTime={localTime.time} aria-label={`Your local time: ${localTime.time}, ${localTime.isNight ? "night" : "day"}`}><svg className={styles.clockIcon} viewBox="0 0 16 16" aria-hidden="true" shapeRendering="crispEdges">
+        {localTime.isNight
+          ? <g>
+              <path fill="#d99a46" d="M9 1h2v1H9v1H7v2H6v5h1v2h2v1h4v-1h2v1h-1v1h-2v1H6v-1H4v-1H3v-2H2V6h1V4h1V3h2V2h3z" />
+              <path fill="#f6c66e" d="M9 1h2v1H9v1H7v2H6v5h1v2h2v1h4v-1h2v1h-3v1H7v-1H5v-1H4v-2H3V6h1V4h2V3h1V2h2z" />
+            </g>
+          : <path fill="#9b691d" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h2v2H2zM12 2h2v2h-2zM2 12h2v2H2zM12 12h2v2h-2zM6 4h4v2h2v4h-2v2H6v-2H4V6h2z" />}
+      </svg>{localTime.time}</time>}
     <div ref={viewport} className={styles.mapViewport}
-      style={map.id === OVERWORLD_ID ? { background: "#458cd3 url('/maps/pixel-water.svg') repeat top left / 144px 144px" } : undefined}
+      style={{ filter: localTime?.filter, ...(map.id === OVERWORLD_ID ? { background: "#458cd3 url('/maps/pixel-water.svg') repeat top left / 144px 144px" } : {}) }}
       aria-label={`Interactive map of ${map.label}`}
       onKeyDown={event => { if (event.key === "Escape" && pickingLocation) { event.preventDefault(); cancelLocation(); } }}
       onPointerDown={event => {

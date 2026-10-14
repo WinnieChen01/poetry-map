@@ -67,28 +67,57 @@
   text-shadow: 2px 2px 0 #aab696;
 }
 .feedCount { margin-left: auto; font-size: 11px; color: #303c2b; }
-.mapPage .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 0; }
-.mapPage .grid > li { padding: 0 10px; }
-.mapPage .grid > li:not(:nth-child(3n + 1)) { border-left: 1px solid #303c2b70; }
+.mapPage .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.mapPage .grid > li { min-width: 0; }
 .mapPage .card {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  padding: 18px;
+  border: 1px solid #303c2b50;
+  border-radius: 8px;
+  background: #fff6dc;
+  color: #303c2b;
+  box-shadow: 4px 4px 0 #303c2b24;
+  gap: 12px;
 }
-.mapPage .cardText { padding: 0 0 10px; }
-.mapPage .card h2 { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.mapPage .card[data-period="morning"] { background: #edf2df; }
+.mapPage .card[data-period="dusk"] { background: #f6e2d7; }
+.mapPage .card[data-period="night"] {
+  background: url('/maps/pixel-stars.svg') repeat, linear-gradient(155deg, #20233d, #263653);
+  color: #fff5df;
+  border-color: #53647b;
+  box-shadow: 4px 4px 0 #15203355;
+}
+.mapPage .card[data-period="night"] small { color: #c0cbd9; }
+.mapPage .card[data-period="night"] .poemText { text-shadow: 0 1px 2px #10182c; }
+.cardTimestamp { font-size: 11px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.mapPage .card[data-period="night"] .cardTimestamp { color: #c0cbd9; }
+.clockIcon { width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; }
+.mapPage .card[data-period="night"] .voteArea { border-top-color: #53647b; }
+.mapPage .card[data-period="night"] .voteButtons button {
+  background: #2c3c54;
+  color: #f4eedc;
+  border-color: #8291a6;
+}
+.mapPage .card[data-period="night"] .voteButtons button[aria-pressed="true"] {
+  background: #e6d6a6;
+  color: #202c40;
+  border-color: #e6d6a6;
+}
+.mapPage .card[data-period="night"] .voteButtons a { color: #e6d6a6; }
+.mapPage .card[data-period="night"] :focus-visible { outline: 3px solid #e6d6a6; outline-offset: 3px; }
+.mapPage .cardText { padding: 0; }
+.mapPage .card h2 { overflow-wrap: anywhere; }
 .mapPage .image {
-  border: 2px solid #303c2b;
-  background: #eee9d8a6;
-  image-rendering: pixelated;
+  border: 0;
+  background: transparent;
+  height: clamp(160px, 29dvh, 300px);
+  aspect-ratio: auto;
+  object-fit: contain;
 }
 .mapPage .notice { background: #f5efdbd9; border-radius: 0; }
 @media (max-width: 600px) {
   .mapPage { padding: 0 14px 28px; }
 
   .newspaper { margin-top: 12vh; padding: 12px; }
-  .mapPage .grid > li { padding: 0 6px; }
   .mapPage .card h2 { font-size: 11px; }
 }
 
@@ -546,10 +575,10 @@
 .buildingStatic { cursor: default; }
 .mapPage .userHeader { position: relative; z-index: 3; pointer-events: none; }
 .mapPage .accountNav { pointer-events: auto; }
-.paperOverlay { position: fixed; z-index: 2; inset: 90px 6vw 105px; overflow-y: auto; overscroll-behavior: contain; }
+.paperOverlay { position: fixed; z-index: 2; inset: 80px 24px 78px; overflow-y: auto; overscroll-behavior: contain; }
 .paperOverlay .newspaper { margin: 0; width: 100%; min-height: 100%; padding: 28px; }
 .paperOverlay .card h2 { font-size: clamp(14px, 1.5vw, 20px); }
-.paperOverlay .grid > li { padding: 0 18px; }
+
 .mapControls { position: fixed; z-index: 3; left: 16px; bottom: 20px; display: flex; gap: 6px; }
 .mapControls button, .newPostButton { font: bold 13px 'Courier New', monospace; color: #303c2b; background: #f5efdbeF; border: 3px solid #303c2b; box-shadow: 3px 3px #303c2b80; cursor: pointer; padding: 10px; }
 .mapControls button:focus-visible, .newPostButton:focus-visible { outline: 3px solid white; outline-offset: 3px; }
@@ -562,7 +591,12 @@
 .composeDialog label { display: block; margin: 16px 0; font-size: 14px; }
 .composeDialog select, .composeDialog textarea { display: block; width: 100%; font: inherit; padding: 10px; margin-top: 8px; border: 2px solid #303c2b; background: #fffdf5; color: #303c2b; }
 .composeClose { position: absolute; top: 8px; right: 12px; font-size: 24px; border: 0; background: transparent; cursor: pointer; color: #303c2b; }
-@media (max-width: 640px) { .mapControls { bottom: 100px; left: 12px; flex-wrap: wrap; max-width: 180px; } .paperOverlay { inset: 90px 14px 155px; } .paperOverlay .newspaper { padding: 16px; } .paperOverlay .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .paperOverlay .grid > li { padding: 0 8px; border-left: 0; } .paperOverlay .grid > li:nth-child(even) { border-left: 1px solid #303c2b70; } }
+@media (max-width: 640px) {
+  .mapControls { bottom: 100px; left: 12px; flex-wrap: wrap; max-width: 180px; }
+  .paperOverlay { inset: 90px 8px 85px; }
+  .paperOverlay .newspaper { padding: 16px; }
+}
+
 
 .paperClose { position: absolute; top: 12px; right: 12px; z-index: 1; width: 40px; height: 40px; border: 2px solid #303c2b; background: #f5efdb; color: #303c2b; font: bold 28px monospace; cursor: pointer; }
 .paperClose:focus-visible { outline: 3px solid #527647; outline-offset: 2px; }
@@ -793,8 +827,19 @@
   white-space: pre-line;
   overflow-wrap: break-word;
 }
+@media (min-width: 761px) and (max-width: 1100px) {
+  .mapPage .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 760px) {
   .mapPage .grid { grid-template-columns: 1fr; }
-  .mapPage .grid > li:not(:nth-child(3n + 1)) { border-left: 0; }
   .paperOverlay .newspaper { padding: 16px; }
 }
+
+.profileActions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.profileActions button { font-family: inherit; cursor: pointer; }
+.deleteAccountButton { padding: 10px 12px; border: 2px solid #9b4035; background: #fff0e8; color: #87342b; font-size: 12px; font-weight: 700; }
+.profileActions button:disabled { opacity: .6; cursor: wait; }
+
+.mapViewport { transition: filter 15s linear; }
+.mapClock { position: fixed; left: 20px; top: 24px; z-index: 3; padding: 8px 12px; background: #f5efdb; color: #303c2b; border: 2px solid #303c2b; box-shadow: 3px 3px #303c2b80; font: bold 16px 'Courier New', monospace; font-variant-numeric: tabular-nums; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .mapViewport { transition: none; } }

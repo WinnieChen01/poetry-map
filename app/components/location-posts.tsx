@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import MemoryCard from "./memory-card";
 import VoteButtons from "./vote-buttons";
 import styles from "../page.module.css";
-type Post = { id: string; caption: string; generation_id: string | null; score: number; images: { image_url: string; description: string } | null };
+type Post = { id: string; created_at: string; caption: string; generation_id: string | null; score: number; images: { image_url: string; description: string } | null };
 type Result = { posts: Post[]; votes: { post_id: string; value: number }[]; signedIn: boolean; hasMore: boolean };
 export default function LocationPosts({ location, onCreate }: { location: string; onCreate: () => void }) {
   const [page, setPage] = useState(0);
@@ -26,11 +27,11 @@ export default function LocationPosts({ location, onCreate }: { location: string
     {error && <p role="alert">{error} <button onClick={() => { setError(""); setRetry(value => value + 1); }}>Retry</button></p>}
     {result && <>
       {!result.posts.length && <p className={styles.notice}>No posts here yet. Be the first.</p>}
-      <ul className={styles.grid}>{result.posts.map(post => <li key={post.id}><article className={styles.card}>
+      <ul className={styles.grid}>{result.posts.map(post => <li key={post.id}><MemoryCard createdAt={post.created_at}>
         <div className={styles.cardText}><h2 className={styles.poemText}>{post.caption}</h2></div>
         {post.images && <Image src={post.images.image_url} alt={post.images.description} width={640} height={640} unoptimized className={styles.image} />}
         <VoteButtons postId={post.id} signedIn={result.signedIn} initialScore={post.score} initialValue={result.votes.find(vote => vote.post_id === post.id)?.value ?? 0} />
-      </article></li>)}</ul>
+      </MemoryCard></li>)}</ul>
       <div className={styles.composerActions}>
         {page > 0 && <button onClick={() => changePage(page - 1)}>Previous</button>}
         {result.hasMore && <button onClick={() => changePage(page + 1)}>Next</button>}

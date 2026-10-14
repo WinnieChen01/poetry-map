@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" shape-rendering="crispEdges">
+  <g fill="#d8ddff" opacity=".18">
+    <path d="M16 28h2v2h-2zM73 17h2v2h-2zM148 35h2v2h-2zM216 14h2v2h-2zM38 94h2v2h-2zM111 73h2v2h-2zM192 101h2v2h-2zM12 174h2v2h-2zM83 145h2v2h-2zM147 188h2v2h-2zM222 162h2v2h-2zM54 221h2v2h-2zM203 224h2v2h-2z"/>
+  </g>
+  <g fill="#e9dcad" opacity=".3">
+    <path d="M177 52h2v2h2v2h-2v2h-2v-2h-2v-2h2zM49 153h2v2h2v2h-2v2h-2v-2h-2v-2h2zM119 216h2v2h-2z"/>
+  </g>
+</svg>

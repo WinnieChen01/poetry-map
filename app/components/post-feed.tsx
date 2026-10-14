@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import MemoryCard from "./memory-card";
 import VoteButtons from "./vote-buttons";
 import styles from "../page.module.css";
 
@@ -33,7 +34,7 @@ export default function PostFeed({ posts, signedIn, votes }: { posts: FeedPost[]
       <ul className={styles.grid}>
         {ordered.map(post => (
           <li key={post.id}>
-            <article className={styles.card}>
+            <MemoryCard createdAt={post.created_at}>
               <div className={styles.cardText}>
                 <h2 className={styles.poemText}>{post.caption}</h2>
                 {post.generation_id && <small>AI-assisted{post.location ? ` · ${post.location}` : ""}</small>}
@@ -44,7 +45,7 @@ export default function PostFeed({ posts, signedIn, votes }: { posts: FeedPost[]
                 <p className={styles.notice}>Image unavailable</p>
               )}
               <VoteButtons postId={post.id} signedIn={signedIn} initialValue={votes[post.id] ?? 0} initialScore={post.score} />
-            </article>
+            </MemoryCard>
           </li>
         ))}
       </ul>

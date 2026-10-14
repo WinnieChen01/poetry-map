@@ -131,3 +131,18 @@ verifies draft ownership, saves text and coordinates atomically, and safely
 returns the existing post on repeat requests. Existing rows and voting policies
 are preserved. Verified authenticated saving, duplicate retry handling, foreign-draft rejection,
 and anonymous access denial with rollback-only tests.
+
+### Permanent account deletion
+
+The profile header confirms deletion before calling `DELETE /api/account`.
+The authenticated Supabase `delete-account` Edge Function deletes the caller's
+profile photos from `avatars`, releases ownership of their `meme-images` objects
+through a service-role-only RPC, then hard-deletes the Auth user. A private trigger
+removes owned posts and generations; profile, votes and sessions cascade.
+Memory image records and files remain in the shared library with no owner.
+Other users' memories retain their photos. Storage and Auth changes are not atomic;
+a failed attempt may remove the avatar or release image ownership before retry.
+No service-role credential is sent to the browser or stored in Next.js.
+Edge Function source is under `supabase/functions` (Deno runtime, excluded from
+Next.js TypeScript compilation). Database cleanup was verified with rollback-only
+tests and the deployed function rejects unauthenticated requests.

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (!location || !isValidLocation(location) || !Number.isSafeInteger(page) || page < 0 || page > 100000) return reply({ error: "Invalid location." }, 400);
   const db = await createAuthClient();
   const { data: { user } } = await db.auth.getUser();
-  const { data, error } = await db.from("posts").select("id,caption,generation_id,score,images(image_url,description)").eq("location", location).order("created_at", { ascending: false }).order("id").range(page * 12, page * 12 + 12);
+  const { data, error } = await db.from("posts").select("id,caption,created_at,generation_id,score,images(image_url,description)").eq("location", location).order("created_at", { ascending: false }).order("id").range(page * 12, page * 12 + 12);
   if (error) return reply({ error: "Couldn’t load posts. Please retry." }, 503);
   const posts = data.slice(0, 12);
   const { data: votes, error: voteError } = user && posts.length ? await db.from("votes").select("post_id,value").eq("user_id", user.id).in("post_id", posts.map(post => post.id)) : { data: [], error: null };
