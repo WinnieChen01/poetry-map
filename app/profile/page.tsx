@@ -26,13 +26,7 @@ export default async function ProfilePage() {
         ) : (
           <ProfileHeader profile={profile} photoUrl={avatarUrl(profile.avatar_path)} incomplete={incomplete} postCount={(posts ?? []).length} />
         )}
-        <div className={styles.profileSectionHeading}>
-          <h1>your posts</h1>
-          <span>{(posts ?? []).length} {(posts ?? []).length === 1 ? "post" : "posts"}</span>
-        </div>
-        <div className={styles.profilePostsScroll} tabIndex={0} role="region" aria-label="Your posts">
-          <MyPosts posts={posts ?? []} />
-        </div>
+        <MyPosts posts={posts ?? []} />
       </section>
     </main>
   );

@@ -699,7 +699,7 @@
 .profilePage .signOut { background: #f5efdb; }
 .profilePage .avatar { border-radius: 50%; image-rendering: pixelated; }
 .profileGallery {
-  width: min(980px, 100%);
+  width: min(1120px, 100%);
   margin: 32px auto 0;
   font-family: 'Courier New', monospace;
   color: #303c2b;
@@ -789,11 +789,24 @@
 }
 .profileSectionHeading h1 { font-size: clamp(26px, 5vw, 40px); font-weight: 900; letter-spacing: -1px; }
 .profileSectionHeading span { font-size: 12px; color: #5b6550; }
+.profileSectionTools { display: flex; align-items: baseline; gap: 16px; }
+.postSort { display: flex; gap: 6px; }
+.postSort button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  color: #303c2b;
+  background: #fffdf5;
+  border: 2px solid #303c2b;
+  cursor: pointer;
+}
+.postSort button[aria-pressed="true"] { background: #303c2b; color: #fffdf5; }
+.postSort button:focus-visible { outline: 3px solid #677e3e; outline-offset: 3px; }
 .myPostGrid {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 360px));
-  justify-content: start;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   align-items: start;
   gap: 20px;
 }
@@ -822,7 +835,6 @@
 .profilePage .card .myPostActions button { color: #303c2b; }
 .myPostActions button:disabled { opacity: .55; cursor: default; }
 @media (max-width: 640px) {
-  .myPostGrid { grid-template-columns: minmax(0, 360px); }
   .profileCard { flex-wrap: wrap; }
 }
 
@@ -863,7 +875,3 @@
 .mapViewport { transition: filter 15s linear; }
 .mapClock { position: fixed; left: 20px; top: 24px; z-index: 3; padding: 8px 12px; background: #f5efdb; color: #303c2b; border: 2px solid #303c2b; box-shadow: 3px 3px #303c2b80; font: bold 16px 'Courier New', monospace; font-variant-numeric: tabular-nums; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .mapViewport { transition: none; } }
-
-@media (min-width: 641px) and (max-width: 900px) {
-  .myPostGrid { grid-template-columns: repeat(2, minmax(0, 360px)); }
-}

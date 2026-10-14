@@ -19,6 +19,11 @@ export type MyPost = {
 export default function MyPosts({ posts }: { posts: MyPost[] }) {
   const router = useRouter();
   const grid = useRef<HTMLUListElement>(null);
+  const [sort, setSort] = useState<"newest" | "popular">("newest");
+  // The server returns newest first, so only popularity needs reordering.
+  const ordered = sort === "popular"
+    ? [...posts].sort((a, b) => b.score - a.score || b.id.localeCompare(a.id))
+    : posts;
   useEffect(() => {
     const list = grid.current;
     const region = list?.closest<HTMLElement>("[aria-label='Your posts']");
@@ -35,7 +40,7 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
     Array.from(list.children).forEach(card => observer.observe(card));
     measure();
     return () => observer.disconnect();
-  }, [posts]);
+  }, [posts, sort]);
   const locationDialog = useRef<HTMLDialogElement>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -76,12 +81,22 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
     finally { setBusy(""); }
   }
 
-  if (!posts.length) return <p className={styles.notice}>You haven’t posted yet. Use “+new” on the map to save your first poem.</p>;
-
   return <>
-    {error && <p role="alert" className={styles.formError}>{error}</p>}
-    <ul ref={grid} className={styles.myPostGrid}>
-      {posts.map(post => <li key={post.id}>
+    <div className={styles.profileSectionHeading}>
+      <h1>your posts</h1>
+      <div className={styles.profileSectionTools}>
+        <span>{posts.length} {posts.length === 1 ? "post" : "posts"}</span>
+        <div className={styles.postSort} role="group" aria-label="Sort your posts">
+          <button type="button" aria-pressed={sort === "newest"} onClick={() => setSort("newest")}>Recent</button>
+          <button type="button" aria-pressed={sort === "popular"} onClick={() => setSort("popular")}>Popular</button>
+        </div>
+      </div>
+    </div>
+    <div className={styles.profilePostsScroll} tabIndex={0} role="region" aria-label="Your posts">
+      {error && <p role="alert" className={styles.formError}>{error}</p>}
+      {!posts.length ? <p className={styles.notice}>You haven’t posted yet. Use “+new” on the map to save your first poem.</p> :
+      <ul ref={grid} className={styles.myPostGrid}>
+        {ordered.map(post => <li key={post.id}>
         <MemoryCard createdAt={post.created_at}>
           <div className={styles.myPostImage}>
             {post.images ? <Image src={post.images.image_url} alt={post.images.description} width={400} height={400} unoptimized /> : <p className={styles.notice}>Image unavailable</p>}
@@ -106,8 +121,10 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
             </div>
           </div>}
         </MemoryCard>
-      </li>)}
-    </ul>
+        </li>)}
+      </ul>
+      }
+    </div>
     <dialog ref={locationDialog} className={styles.locationDialog} onClick={event => { if (event.target === event.currentTarget) locationDialog.current?.close(); }}>
       <div className={styles.profileDialogInner}>
         <button type="button" className={styles.composeClose} aria-label="Close location picker" onClick={() => locationDialog.current?.close()}>×</button>
