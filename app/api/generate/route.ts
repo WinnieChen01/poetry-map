@@ -46,5 +46,5 @@ export async function POST(request: Request) {
     const { error: saveError } = await db.from("generations").update({ caption }).eq("id", generation.id).select("id").single();
     if (saveError) return reply({ error: "Couldn’t save the poem. Please try again." }, 503);
     return reply({ id: generation.id, caption });
-  } catch { return reply({ error: "Gemini didn’t respond after four attempts. Your draft is unchanged; please try again later." }, 503); }
+  } catch { return reply({ error: "Gemini didn’t respond after retries. Your draft is unchanged; please try again later." }, 503); }
 }

@@ -4,7 +4,7 @@ import { createAuthClient } from "@/lib/supabase/server";
 import GoogleButton from "./google-button";
 import styles from "../page.module.css";
 
-export const metadata = { title: "Sign in | Memory Diary" };
+export const metadata = { title: "Sign in | Poetry Map" };
 
 export default async function LoginPage() {
   const supabase = await createAuthClient();
@@ -15,7 +15,7 @@ export default async function LoginPage() {
     <main className={styles.page}>
       <header className={styles.userHeader}><Link href="/">Back to posts</Link></header>
       <section className={styles.authPanel}>
-        <h1>Sign in</h1>
+        <h1>Sign in to Poetry Map</h1>
         <GoogleButton />
       </section>
     </main>

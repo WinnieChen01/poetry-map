@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Memory Diary | Winnie Chen",
+  title: "Poetry Map | Winnie Chen",
   description: "A location-based memory diary with AI-assisted poetry.",
 };
 

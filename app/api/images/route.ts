@@ -1,5 +1,4 @@
 import sharp from "sharp";
-import { describeImage } from "@/lib/gemini";
 import { createAuthClient } from "@/lib/supabase/server";
 import { imageType } from "@/lib/profile-validation";
 import { reply } from "@/lib/mutation";
@@ -16,6 +15,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try { return await uploadImage(request); }
+  catch {
+    console.error("Image upload failed unexpectedly");
+    return reply({ error: "Upload is temporarily unavailable. Your photo is still selected; please retry." }, 503);
+  }
+}
+
+async function uploadImage(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin) return reply({ error: "Invalid request origin." }, 403);
   const db = await createAuthClient();
   const { data: { user }, error: authError } = await db.auth.getUser();
@@ -47,13 +54,8 @@ export async function POST(request: Request) {
       normalized = await sharp(bytes, { limitInputPixels: 25000000, failOn: "warning" }).rotate().resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
     } catch { return reply({ error: "This image couldn’t be opened. Try a smaller JPG, PNG, or WebP." }, 400); }
     if (normalized.byteLength > 2 * 1024 * 1024) return reply({ error: "This image is too large after processing. Choose a smaller image." }, 400);
-    // Generate a description when the uploader didn’t provide one, so every
-    // stored image has a usable library description.
-    if (!descriptionText) {
-      const outcome = await describeImage(normalized, "image/webp");
-      if ("error" in outcome) return reply({ error: outcome.error }, outcome.status);
-      descriptionText = outcome.text.slice(0, 200);
-    }
+    // Uploads must not wait for an AI provider. Poetry reads the image itself.
+    if (!descriptionText) descriptionText = "Uploaded photo";
     const path = `${user.id}/${crypto.randomUUID()}.webp`;
     const { error: uploadError } = await db.storage.from("meme-images").upload(path, normalized, { contentType: "image/webp", upsert: false });
     if (uploadError) return reply({ error: "Upload unavailable. Please check image storage permissions." }, 503);

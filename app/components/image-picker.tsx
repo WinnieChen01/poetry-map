@@ -55,11 +55,15 @@ export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeCh
       const prepared = await preparePhoto(next);
       if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
       previewUrl.current = URL.createObjectURL(prepared); setPreview(previewUrl.current);
-      setStatus("Uploading and generating a description…");
+      setStatus("Uploading photo…");
       const form = new FormData(); form.set("image", prepared);
       const response = await fetch("/api/images", { method: "POST", body: form });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Upload failed.");
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.image?.id || !data?.image?.image_url) {
+        throw new Error(typeof data?.error === "string" ? data.error
+          : response.status === 413 ? "This photo is too large to upload. Choose a smaller version."
+          : "Upload is temporarily unavailable. Your photo is still selected; please retry.");
+      }
       onSelect(data.image); setImages(current => [data.image, ...current]);
       if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
       previewUrl.current = ""; setPreview(""); setPendingFile(null); onModeChange("browse");
@@ -67,14 +71,14 @@ export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeCh
     finally { lock.current = false; setBusy(false); onBusy(false); }
   }
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
-    const next = event.target.files?.[0]; setError("");
+    const input = event.currentTarget;
+    const next = input.files?.[0]; setError("");
     if (!next) return;
     if (lock.current) return;
     setPendingFile(next);
     if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
     previewUrl.current = ""; setPreview("");
-    event.target.value = "";
-    void upload(next);
+    void upload(next).finally(() => { input.value = ""; });
   }
   return <section aria-label="Choose a photo">
     <div className={styles.imageOptions}>
@@ -91,9 +95,9 @@ export default function ImagePicker({ selected, onSelect, onBusy, mode, onModeCh
       <label>Choose image<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={chooseFile} /></label>
       {pendingFile && <p className={styles.hint}>{pendingFile.name}</p>}
       {preview && <Image className={styles.uploadPreview} src={preview} alt="Upload preview" width={300} height={180} unoptimized />}
-      <p className={styles.hint}>{busy ? status : "JPG, PNG or WebP · Up to 20 MB. Large photos are resized automatically."}</p>
+      <p className={styles.hint} aria-live="polite">{busy ? <><span className={styles.spinner} aria-hidden="true" />{status}</> : "JPG, PNG or WebP · Up to 20 MB. Large photos are resized automatically."}</p>
     </>}
-    {error && <p role="alert">{error}</p>}
+    {error && <p className={styles.captionError} role="alert">{error}</p>}
     {mode === "upload" && error && preview && pendingFile && !busy && <button type="button" onClick={() => void upload(pendingFile)}>Retry upload</button>}
   </section>;
 }

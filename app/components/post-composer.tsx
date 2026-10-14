@@ -64,7 +64,7 @@ export default function PostComposer({ images, pin, onPublished, onPickLocation 
   return <form onSubmit={event => { event.preventDefault(); void (draft ? save() : generate(tone)); }}>
     <fieldset disabled={!!busy || !!draft} className={styles.composerFields}>
       {!draft && <ImagePicker selected={image} onSelect={setImage} onBusy={setUploading} mode={mode} onModeChange={setMode} />}
-      <label>What does this moment mean to you? (optional)<textarea value={situation} onChange={event => setSituation(event.target.value)} maxLength={500} rows={3} placeholder="Walking alone in NYC after the rain, feeling nostalgic." /></label>
+      <label>What stands out to you in this moment? (optional)<textarea value={situation} onChange={event => setSituation(event.target.value)} maxLength={500} rows={3} placeholder="The late sunlight turned the windows gold. I stopped for a moment on my way home." /></label>
       {!draft && <div className={styles.tonePicker} role="group" aria-label="Poem tone (optional)">
         <span>Tone (optional)</span>
         <button type="button" aria-pressed={tone === ""} onClick={() => setTone("")}>Default</button>

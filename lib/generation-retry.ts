@@ -1,4 +1,4 @@
-// Four 60-second attempts plus backoff fit inside the route's 300s budget.
+// Retry transient failures up to four times per model.
 // Only transient network/server failures are retried, never auth or quota errors.
 export async function generationWithRetry(
   request: () => Promise<Response>,

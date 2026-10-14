@@ -6,7 +6,7 @@ import ProfileHeader from "./profile-header";
 import MyPosts, { type MyPost } from "./my-posts";
 import styles from "../page.module.css";
 
-export const metadata = { title: "Your posts | Memory Diary" };
+export const metadata = { title: "Your posts | Poetry Map" };
 
 export default async function ProfilePage() {
   const supabase = await createAuthClient();

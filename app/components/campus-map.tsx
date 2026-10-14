@@ -16,7 +16,6 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
   const [paper, setPaper] = useState(true);
   const [locationPanel, setLocationPanel] = useState("");
   const [composerVersion, setComposerVersion] = useState(0);
-  const [settings, setSettings] = useState(false);
   const [selected, setSelected] = useState("");
   const [hovered, setHovered] = useState("");
   const [pickingLocation, setPickingLocation] = useState(false);
@@ -31,7 +30,8 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
   const composer = useRef<HTMLDialogElement>(null);
 
   const map = mapById(mapId);
-  const names = map.regions.map(region => region.name);
+  // Multiple lawn polygons share one location; list it only once in the picker.
+  const names = [...new Set(map.regions.filter(region => !region.goto).map(region => region.name))];
 
   const resetMapView = useCallback(() => {
     const bounds = viewport.current?.getBoundingClientRect();
@@ -164,19 +164,9 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
     <div className={styles.mapControls} aria-label="Map controls">
       {map.id === OVERWORLD_ID
         ? <button type="button" onClick={() => setMapId(DEFAULT_MAP_ID)}>← columbia</button>
-        : <button type="button" onClick={() => setMapId(OVERWORLD_ID)}>island</button>}
-      <button type="button" aria-label="Map settings" aria-expanded={settings} aria-controls="map-settings" onClick={() => setSettings(value => !value)}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M9 2h6v3l2 1 3-1 2 5-3 2v2l2 2-3 5-3-2-2 1v2H9v-3l-2-1-3 1-2-5 3-2v-2L3 8l3-5 3 2z"/><path d="M9 9h6v6H9z"/></svg>
-      </button>
+        : <button type="button" onClick={() => { setMapId(OVERWORLD_ID); setPaper(false); setLocationPanel(""); }}>island</button>}
       <button disabled={pickingLocation} onClick={() => { setLocationPanel(""); setPaper(value => locationPanel ? true : !value); }} aria-expanded={paper && !locationPanel}>trending</button>
-      {settings && <div id="map-settings" className={styles.mapSettings} onKeyDown={event => { if (event.key === "Escape") setSettings(false); }}>
-      <strong>Map settings</strong>
-      <div className={styles.settingsActions}>
-      <button aria-label="Zoom in" onClick={() => { const r = viewport.current!.getBoundingClientRect(); const p = { x: r.width / 2, y: r.height / 2 }; transform(p, p, 1.25); }}>+</button>
-      <button aria-label="Zoom out" onClick={() => { const r = viewport.current!.getBoundingClientRect(); const p = { x: r.width / 2, y: r.height / 2 }; transform(p, p, .8); }}>−</button>
-      <button onClick={resetMapView}>Reset</button>
-      </div>
-      </div>}
+
     </div>
     <div className={styles.newPostDock} hidden={pickingLocation}>
       <button className={styles.newPostButton} onClick={openComposer} aria-label="Create a new post">
@@ -189,7 +179,7 @@ export default function CampusMap({ children, signedIn, images }: { children: Re
       <h2>new memory</h2>
       {!signedIn ? <Link href="/login" className={styles.authButton}>Sign in to create</Link> : <PostComposer key={composerVersion} images={images} pin={pin} onPickLocation={() => {
         previousLocation.current = selected;
-        setPickingLocation(true); setPaper(false); setSettings(false);
+        setPickingLocation(true); setPaper(false);
         composer.current?.close();
         requestAnimationFrame(() => { const first = viewport.current?.querySelector<SVGPolygonElement>("polygon"); first?.focus({ preventScroll: true }); });
       }} onPublished={() => { composer.current?.close(); setHovered(""); setSelected(""); setPin(null); setLocationPanel(""); setPaper(true); }} />}
