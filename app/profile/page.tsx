@@ -15,7 +15,7 @@ export default async function ProfilePage() {
   const { data: profile, error } = await supabase.from("profiles")
     .select("id,first_name,last_name,avatar_path").eq("id", user.id).maybeSingle();
   const incomplete = !hasCompleteName(profile);
-  const { data: posts } = await supabase.from("posts").select("id,caption,location,score,images(image_url,description)").eq("user_id", user.id).order("created_at", { ascending: false }).order("id").returns<MyPost[]>();
+  const { data: posts } = await supabase.from("posts").select("id,caption,created_at,location,score,images(image_url,description)").eq("user_id", user.id).order("created_at", { ascending: false }).order("id").returns<MyPost[]>();
 
   return (
     <main className={`${styles.page} ${styles.profilePage}`}>

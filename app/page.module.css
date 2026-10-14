@@ -67,9 +67,9 @@
   text-shadow: 2px 2px 0 #aab696;
 }
 .feedCount { margin-left: auto; font-size: 11px; color: #303c2b; }
-.mapPage .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.mapPage .grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px)); justify-content: center; gap: 20px; align-items: start; }
 .mapPage .grid > li { min-width: 0; }
-.mapPage .card {
+:is(.mapPage, .profilePage) .card {
   padding: 18px;
   border: 1px solid #303c2b50;
   border-radius: 8px;
@@ -78,34 +78,34 @@
   box-shadow: 4px 4px 0 #303c2b24;
   gap: 12px;
 }
-.mapPage .card[data-period="morning"] { background: #edf2df; }
-.mapPage .card[data-period="dusk"] { background: #f6e2d7; }
-.mapPage .card[data-period="night"] {
+:is(.mapPage, .profilePage) .card[data-period="morning"] { background: #edf2df; }
+:is(.mapPage, .profilePage) .card[data-period="dusk"] { background: #f6e2d7; }
+:is(.mapPage, .profilePage) .card[data-period="night"] {
   background: url('/maps/pixel-stars.svg') repeat, linear-gradient(155deg, #20233d, #263653);
   color: #fff5df;
   border-color: #53647b;
   box-shadow: 4px 4px 0 #15203355;
 }
-.mapPage .card[data-period="night"] small { color: #c0cbd9; }
-.mapPage .card[data-period="night"] .poemText { text-shadow: 0 1px 2px #10182c; }
+:is(.mapPage, .profilePage) .card[data-period="night"] small { color: #c0cbd9; }
+:is(.mapPage, .profilePage) .card[data-period="night"] .poemText { text-shadow: 0 1px 2px #10182c; }
 .cardTimestamp { font-size: 11px; line-height: 1.5; font-variant-numeric: tabular-nums; }
-.mapPage .card[data-period="night"] .cardTimestamp { color: #c0cbd9; }
+:is(.mapPage, .profilePage) .card[data-period="night"] .cardTimestamp { color: #c0cbd9; }
 .clockIcon { width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; }
-.mapPage .card[data-period="night"] .voteArea { border-top-color: #53647b; }
-.mapPage .card[data-period="night"] .voteButtons button {
+:is(.mapPage, .profilePage) .card[data-period="night"] .voteArea { border-top-color: #53647b; }
+:is(.mapPage, .profilePage) .card[data-period="night"] .voteButtons button {
   background: #2c3c54;
   color: #f4eedc;
   border-color: #8291a6;
 }
-.mapPage .card[data-period="night"] .voteButtons button[aria-pressed="true"] {
+:is(.mapPage, .profilePage) .card[data-period="night"] .voteButtons button[aria-pressed="true"] {
   background: #e6d6a6;
   color: #202c40;
   border-color: #e6d6a6;
 }
-.mapPage .card[data-period="night"] .voteButtons a { color: #e6d6a6; }
-.mapPage .card[data-period="night"] :focus-visible { outline: 3px solid #e6d6a6; outline-offset: 3px; }
-.mapPage .cardText { padding: 0; }
-.mapPage .card h2 { overflow-wrap: anywhere; }
+:is(.mapPage, .profilePage) .card[data-period="night"] .voteButtons a { color: #e6d6a6; }
+:is(.mapPage, .profilePage) .card[data-period="night"] :focus-visible { outline: 3px solid #e6d6a6; outline-offset: 3px; }
+:is(.mapPage, .profilePage) .cardText { padding: 0; }
+:is(.mapPage, .profilePage) .card h2 { overflow-wrap: anywhere; }
 .mapPage .image {
   border: 0;
   background: transparent;
@@ -118,7 +118,7 @@
   .mapPage { padding: 0 14px 28px; }
 
   .newspaper { margin-top: 12vh; padding: 12px; }
-  .mapPage .card h2 { font-size: 11px; }
+  :is(.mapPage, .profilePage) .card h2 { font-size: 11px; }
 }
 
 .userHeader {
@@ -768,20 +768,17 @@
 .myPostGrid {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 360px));
+  justify-content: center;
+  align-items: start;
   gap: 20px;
 }
-.myPostCard {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #fffdf5;
-  border: 3px solid #303c2b;
-  box-shadow: 5px 5px 0 #303c2b80;
-}
-.myPostImage { border-bottom: 3px solid #303c2b; background: #e1e5cf; }
-.myPostImage img { display: block; width: 100%; height: 220px; object-fit: contain; }
-.myPostBody, .myPostEdit { display: flex; flex-direction: column; gap: 12px; padding: 16px; flex: 1; }
+.myPostImage { background: transparent; }
+.myPostImage img { display: block; width: 100%; height: clamp(160px, 29dvh, 300px); object-fit: contain; }
+.myPostScore { margin-left: auto; display: inline-flex; align-items: center; gap: 12px; font-size: 14px; }
+.profilePage .card .myPostMeta { color: inherit; opacity: .8; }
+.profilePage .card .myPostEdit textarea, .profilePage .card .myPostLocation button { color: #303c2b; }
+.myPostBody, .myPostEdit { display: flex; flex-direction: column; gap: 12px; padding: 0; flex: 1; }
 .myPostBody h2 { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
 .myPostMeta { font-size: 11px; color: #5b6550; }
 .myPostEdit label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; }
@@ -798,9 +795,10 @@
   cursor: pointer;
 }
 .myPostActions button:hover:not(:disabled) { background: #e1e9cd; }
+.profilePage .card .myPostActions button { color: #303c2b; }
 .myPostActions button:disabled { opacity: .55; cursor: default; }
 @media (max-width: 640px) {
-  .myPostGrid { grid-template-columns: 1fr; }
+  .myPostGrid { grid-template-columns: minmax(0, 360px); }
   .profileCard { flex-wrap: wrap; }
 }
 
@@ -818,7 +816,7 @@
 .poemRefinements button:disabled { opacity: .5; cursor: wait; }
 
 /* Poetry needs a quieter, narrower typeface than the pixel navigation. */
-.mapPage .card h2.poemText, .myPostBody h2.poemText {
+:is(.mapPage, .profilePage) .card h2.poemText, .myPostBody h2.poemText {
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(14px, 1.1vw, 17px);
   font-weight: 400;
@@ -827,17 +825,15 @@
   white-space: pre-line;
   overflow-wrap: break-word;
 }
-@media (min-width: 761px) and (max-width: 1100px) {
-  .mapPage .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @media (max-width: 760px) {
-  .mapPage .grid { grid-template-columns: 1fr; }
+  .mapPage .grid { grid-template-columns: minmax(0, 360px); }
   .paperOverlay .newspaper { padding: 16px; }
 }
 
 .profileActions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .profileActions button { font-family: inherit; cursor: pointer; }
-.deleteAccountButton { padding: 10px 12px; border: 2px solid #9b4035; background: #fff0e8; color: #87342b; font-size: 12px; font-weight: 700; }
+.deleteAccountButton { font-family: "Courier New", monospace; border-radius: 0; box-shadow: 4px 4px 0 #9b403550; cursor: pointer; padding: 10px 12px; border: 2px solid #9b4035; background: #fff0e8; color: #87342b; font-size: 12px; font-weight: 700; }
+.profileDeleteAction { margin-left: auto; }
 .profileActions button:disabled { opacity: .6; cursor: wait; }
 
 .mapViewport { transition: filter 15s linear; }

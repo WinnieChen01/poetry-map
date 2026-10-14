@@ -9,6 +9,7 @@ import styles from "../page.module.css";
 export type MemeImage = { id: string; image_url: string; description: string };
 export default function PostComposer({ images, pin, onPublished, onPickLocation }: { images: MemeImage[]; pin: MemoryPin | null; onPublished: () => void; onPickLocation: () => void; }) {
   const router = useRouter();
+  const selectedPin: MemoryPin = pin ?? { mapId: "columbia", x: 548, y: 587, location: "Lawn" };
   const [image, setImage] = useState<MemeImage | undefined>(images[0]);
   const [mode, setMode] = useState<"browse" | "upload">("browse");
   const [situation, setSituation] = useState("");
@@ -36,7 +37,6 @@ export default function PostComposer({ images, pin, onPublished, onPickLocation 
   }
   async function save() {
     if (locked.current || !draft) return;
-    if (!pin) { onPickLocation(); return; }
     const edited = normalizePoem(poem);
     if (!edited) { setError("Use three nonempty lines, up to 300 characters total."); return; }
     locked.current = true; setBusy("Saving poem…"); setError("");
@@ -50,7 +50,7 @@ export default function PostComposer({ images, pin, onPublished, onPickLocation 
         // Retain the saved revision so a publish retry doesn't create it twice.
         setDraft({ id: generationId, caption: edited });
       }
-      const response = await fetch("/api/publish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ generationId, pin }) });
+      const response = await fetch("/api/publish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ generationId, pin: selectedPin }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Couldn’t save your poem.");
       setDraft(null); setPoem(""); setSituation(""); router.refresh(); onPublished();
@@ -87,11 +87,11 @@ export default function PostComposer({ images, pin, onPublished, onPickLocation 
     </div>}
     {image && mode === "browse" && <div className={styles.captionPreview}><Image src={image.image_url} alt={image.description} width={300} height={230} unoptimized /></div>}
     {draft && <div className={styles.composerLocation}>
-      {pin && <span>{pin.location || "Columbia campus"}</span>}
-      <button type="button" disabled={!!busy} onClick={onPickLocation}>{pin ? "Move pin" : "Drop pin on Columbia map"}</button>
+      <span>{selectedPin.location || "Columbia campus"}</span>
+      <button type="button" disabled={!!busy} onClick={onPickLocation}>Choose location</button>
     </div>}
     <div className={styles.composerActions}>
-      <button className={styles.authButton} disabled={!!busy || uploading || !image || mode === "upload"} type="submit">{busy || (draft ? (pin ? "Save memory" : "Choose a pin to continue") : "Generate poem")}</button>
+      <button className={styles.authButton} disabled={!!busy || uploading || !image || mode === "upload"} type="submit">{busy || (draft ? "Save memory" : "Generate poem")}</button>
       {draft && <><button type="button" disabled={!!busy} onClick={() => void generate()}>Regenerate</button><button type="button" disabled={!!busy} onClick={resetDraft}>Change image or context</button></>}
     </div>
     {draft && <p className={styles.hint}>Saving shares this poem on the map and in the feed.</p>}

@@ -35,11 +35,10 @@ export default function ProfileHeader({ profile, photoUrl, incomplete, postCount
         <small>{postCount} {postCount === 1 ? "post" : "posts"}</small>
       </span>
       <div className={styles.profileActions}>
-        <button type="button" className={styles.deleteAccountButton} onClick={() => { setError(""); confirmation.current?.showModal(); }}>Delete account permanently</button>
         <button type="button" className={styles.profileCardEdit} onClick={() => dialog.current?.showModal()}>Edit profile</button>
       </div>
     </div>
-    <dialog ref={confirmation} className={styles.profileDialog} aria-labelledby="delete-account-title" onCancel={event => { if (deleting) event.preventDefault(); }}>
+    <dialog ref={confirmation} className={styles.profileDialog} aria-labelledby="delete-account-title" onClick={event => { if (event.target === event.currentTarget && !deletingLock.current) confirmation.current?.close(); }} onCancel={event => { if (deleting) event.preventDefault(); }}>
       <div className={styles.profileDialogInner}>
         <h2 id="delete-account-title">Delete your account permanently?</h2>
         <p>Your account, profile photo, posts, generated drafts, and votes will be permanently deleted. This cannot be undone.</p>
@@ -56,7 +55,8 @@ export default function ProfileHeader({ profile, photoUrl, incomplete, postCount
       <div className={styles.profileDialogInner}>
         <button type="button" className={styles.composeClose} aria-label="Close profile editor" onClick={() => dialog.current?.close()}>×</button>
         <h2>Edit profile</h2>
-        <ProfileForm profile={profile} photoUrl={photoUrl} incomplete={incomplete} onSaved={() => dialog.current?.close()} />
+        <ProfileForm profile={profile} photoUrl={photoUrl} incomplete={incomplete} onSaved={() => dialog.current?.close()} onDeleteAccount={() => { setError(""); confirmation.current?.showModal(); }} />
+
       </div>
     </dialog>
   </>;

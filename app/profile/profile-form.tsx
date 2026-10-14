@@ -8,7 +8,7 @@ import styles from "../page.module.css";
 import { preparePhoto } from "@/lib/prepare-photo";
 import PhotoCropper from "./photo-cropper";
 
-export default function ProfileForm({ profile, photoUrl, incomplete, onSaved }: { profile: Profile; photoUrl: string | null; incomplete: boolean; onSaved?: () => void }) {
+export default function ProfileForm({ profile, photoUrl, incomplete, onSaved, onDeleteAccount }: { profile: Profile; photoUrl: string | null; incomplete: boolean; onSaved?: () => void; onDeleteAccount?: () => void }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -101,6 +101,7 @@ export default function ProfileForm({ profile, photoUrl, incomplete, onSaved }: 
         </div>
         <div className={styles.formFooter}>
           <button className={styles.authButton} type="submit" disabled={!!cropSource}>{pending ? "Saving…" : incomplete ? "Save & continue" : "Save changes"}</button>
+          {onDeleteAccount && <button type="button" className={`${styles.deleteAccountButton} ${styles.profileDeleteAction}`} onClick={onDeleteAccount}>Delete account</button>}
           {saved && <p role="status" className={styles.success}>Profile saved.</p>}
         </div>
       </fieldset>

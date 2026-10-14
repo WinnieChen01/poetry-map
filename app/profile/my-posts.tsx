@@ -3,12 +3,14 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import MemoryCard from "../components/memory-card";
 import LocationPicker from "../components/location-picker";
 import styles from "../page.module.css";
 
 export type MyPost = {
   id: string;
   caption: string;
+  created_at: string;
   location: string | null;
   score: number;
   images: { image_url: string; description: string } | null;
@@ -62,7 +64,7 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
     {error && <p role="alert" className={styles.formError}>{error}</p>}
     <ul className={styles.myPostGrid}>
       {posts.map(post => <li key={post.id}>
-        <article className={styles.myPostCard}>
+        <MemoryCard createdAt={post.created_at}>
           <div className={styles.myPostImage}>
             {post.images ? <Image src={post.images.image_url} alt={post.images.description} width={400} height={400} unoptimized /> : <p className={styles.notice}>Image unavailable</p>}
           </div>
@@ -78,13 +80,14 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
             </div>
           </div> : <div className={styles.myPostBody}>
             <h2 className={styles.poemText}>{post.caption}</h2>
-            <p className={styles.myPostMeta}>{post.location || "No location"} · {post.score} {Math.abs(post.score) === 1 ? "point" : "points"}</p>
+            <p className={styles.myPostMeta}>{post.location || "No location"}</p>
             <div className={styles.myPostActions}>
               <button type="button" disabled={!!busy} onClick={() => startEdit(post)}>Edit</button>
               <button type="button" disabled={!!busy} onClick={() => void remove(post.id)}>{busy === "deleting" ? "Deleting…" : "Delete"}</button>
+              <span className={styles.myPostScore} aria-label={`Vote score: ${post.score}`}><span aria-hidden="true">▲</span><span>{post.score}</span><span aria-hidden="true">▼</span></span>
             </div>
           </div>}
-        </article>
+        </MemoryCard>
       </li>)}
     </ul>
     <dialog ref={locationDialog} className={styles.locationDialog} onClick={event => { if (event.target === event.currentTarget) locationDialog.current?.close(); }}>
