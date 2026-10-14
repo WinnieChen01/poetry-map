@@ -27,7 +27,7 @@ export default function LocationPosts({ location, onCreate }: { location: string
     {error && <p role="alert">{error} <button onClick={() => { setError(""); setRetry(value => value + 1); }}>Retry</button></p>}
     {result && <>
       {!result.posts.length && <p className={styles.notice}>No posts here yet. Be the first.</p>}
-      <ul className={styles.grid}>{result.posts.map(post => <li key={post.id}><MemoryCard createdAt={post.created_at}>
+      <ul className={styles.grid} tabIndex={0} aria-label="Memory posts">{result.posts.map(post => <li key={post.id}><MemoryCard createdAt={post.created_at}>
         <div className={styles.cardText}><h2 className={styles.poemText}>{post.caption}</h2></div>
         {post.images && <Image src={post.images.image_url} alt={post.images.description} width={640} height={640} unoptimized className={styles.image} />}
         <VoteButtons postId={post.id} signedIn={result.signedIn} initialScore={post.score} initialValue={result.votes.find(vote => vote.post_id === post.id)?.value ?? 0} />

@@ -30,7 +30,9 @@ export default async function ProfilePage() {
           <h1>your posts</h1>
           <span>{(posts ?? []).length} {(posts ?? []).length === 1 ? "post" : "posts"}</span>
         </div>
-        <MyPosts posts={posts ?? []} />
+        <div className={styles.profilePostsScroll} tabIndex={0} role="region" aria-label="Your posts">
+          <MyPosts posts={posts ?? []} />
+        </div>
       </section>
     </main>
   );

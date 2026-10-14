@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import MemoryCard from "../components/memory-card";
@@ -18,6 +18,24 @@ export type MyPost = {
 
 export default function MyPosts({ posts }: { posts: MyPost[] }) {
   const router = useRouter();
+  const grid = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const list = grid.current;
+    const region = list?.closest<HTMLElement>("[aria-label='Your posts']");
+    if (!list || !region) return;
+    const measure = () => {
+      const cards = Array.from(list.children) as HTMLElement[];
+      const top = cards[0]?.getBoundingClientRect().top;
+      const firstRow = cards.filter(card => Math.abs(card.getBoundingClientRect().top - (top ?? 0)) < 2);
+      const height = Math.max(0, ...firstRow.map(card => card.getBoundingClientRect().height));
+      region.style.setProperty("--first-post-row-height", `${Math.ceil(height) + 24}px`);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    Array.from(list.children).forEach(card => observer.observe(card));
+    measure();
+    return () => observer.disconnect();
+  }, [posts]);
   const locationDialog = useRef<HTMLDialogElement>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -62,7 +80,7 @@ export default function MyPosts({ posts }: { posts: MyPost[] }) {
 
   return <>
     {error && <p role="alert" className={styles.formError}>{error}</p>}
-    <ul className={styles.myPostGrid}>
+    <ul ref={grid} className={styles.myPostGrid}>
       {posts.map(post => <li key={post.id}>
         <MemoryCard createdAt={post.created_at}>
           <div className={styles.myPostImage}>

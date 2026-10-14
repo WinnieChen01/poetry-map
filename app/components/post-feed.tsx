@@ -31,7 +31,7 @@ export default function PostFeed({ posts, signedIn, votes }: { posts: FeedPost[]
     {ordered.length === 0 ? (
       <p className={styles.notice}>No memories yet. Create a poem from a moment you want to keep.</p>
     ) : (
-      <ul className={styles.grid}>
+      <ul className={styles.grid} tabIndex={0} aria-label="Memory posts">
         {ordered.map(post => (
           <li key={post.id}>
             <MemoryCard createdAt={post.created_at}>
