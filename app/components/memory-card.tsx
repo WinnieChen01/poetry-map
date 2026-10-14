@@ -11,7 +11,7 @@ export default function MemoryCard({ createdAt, children }: { createdAt: string;
   const period = useSyncExternalStore(subscribe, () => {
     const hour = new Date(createdAt).getHours();
     if (hour < 6 || hour >= 20) return "night";
-    if (hour < 11) return "morning";
+    if (hour < 10) return "morning";
     if (hour >= 17) return "dusk";
     return "day";
   }, serverSnapshot);
